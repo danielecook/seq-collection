@@ -1,0 +1,17 @@
+Tools:
+  ☐ VCF2JSON
+  ☐ VCF2TAB
+
+
+VCF2JSON:
+  ☐ Add GT decoder → Genotype array
+  ☐ Warn user about supplying region when pipeing in (no index)
+  ☐ Disable keyboard interrupt warnings
+  ☐ Annotation-max flag?
+  ☐ Tests
+  ☐ Warn user when --samples but no format field
+
+VCF2TAB:
+  ☐ Convert VCF to tabular format ~ Wide or long
+
+Genome manager (a better one?):
