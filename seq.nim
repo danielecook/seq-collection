@@ -9,10 +9,13 @@ import strutils
 import tables
 import streams
 import hts
+import ospaths
 import json
+import math
 import tables
 import sequtils
 import terminal
+import gzip_stream
 from constants import ANN_header
 
 proc print_error*(msg: string) =
@@ -178,7 +181,6 @@ proc to_json(vcf: string, region: string, sample_set: string, info: string, form
         echo "]"
         
 
-
 proc check_file(fname: string): bool =
     if not fileExists(fname):
         print_error(fmt"{fname} does not exist or is not readable")
@@ -186,8 +188,31 @@ proc check_file(fname: string): bool =
     return true
 
 
+proc count_fq(fname: string): (int64, int64) =
+    # Return number of bases and
+    # number of reads
+    var n_lines: int64
+    var bases: int64
+    if fname.endsWith("gz"):
+        let fq = openGzRead(fname)
+        while not atEnd(fq):
+            inc(n_lines)
+            if math.floorMod(n_lines + 2, 4) == 0:
+                bases += readLine(fq).len.int64
+            else:
+                discard readLine(fq)
+    n_lines = n_lines div 4
+    return (n_lines, bases)
+
+
 var p = newParser("seq"):
     help("Sequence data utilities")
+    command("bases", group="FASTQ"):
+        arg("fastq", nargs=1, help="FASTQ (.fq or .fq.gz)")
+        run:
+            var (reads, bases) = count_fq(opts.fastq)
+            echo [extractFilename(opts.fastq), opts.fastq, $reads, $bases].join("\t")
+            quit()
     command("json", group="VCF"):
         arg("vcf", nargs=1, help="VCF to convert to JSON")
         arg("region", nargs=1, help="Region")
@@ -211,7 +236,7 @@ var p = newParser("seq"):
                 quit()
             to_json(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array)
             quit()
-    command("filter", group="bam"):
+    command("filter", group="BAM"):
         run:
             echo "G"
 
