@@ -82,6 +82,7 @@ proc to_json(vcf: string, region: string, sample_set: string, info: string, form
     ## Format Fields
     let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
     let format_keep = filterIt(format.split({',',' '}), it.len > 0)
+    
     ## Output fields
     var field_float = newSeq[float32](4)
     var field_int = newSeq[int32](4)
@@ -240,12 +241,11 @@ var p = newParser("seq"):
         run:
             echo "G"
 
-
 # Check if input is from pipe
 var input_params = commandLineParams()
 if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
     input_params[input_params.len-1] = "STDIN"
-elif terminal.isatty(stdin) == false:
+elif terminal.isatty(stdin) == false and check_file(input_params[input_params.len-1]) == false:
     input_params.add("STDIN")
 
 if commandLineParams().find("--help") > -1 or commandLineParams().find("-h") > -1 or commandLineParams().len == 0:
