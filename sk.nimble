@@ -7,7 +7,7 @@ license       = "MIT"
 
 # Dependencies
 
-requires "argparse >= 0.7.1", "colorize"
+requires "argparse >= 0.7.1", "hts >= 0.2.8", "colorize"
 
 bin = @["sk"]
 skipDirs = @["test"]
