@@ -1,5 +1,7 @@
 # seq-kit
 
+[![Build Status](https://travis-ci.org/danielecook/seq-kit.svg?branch=development)](https://travis-ci.org/danielecook/seq-kit)
+
 A collection of useful sequencing utilities.
 
 ## Usage
