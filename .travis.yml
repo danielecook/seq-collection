@@ -1,0 +1,18 @@
+language: c
+env:
+  - BRANCH=devel
+
+before_install:
+  - export LD_LIBRARY_PATH=./htslib/
+  - export PATH="$TRAVIS_BUILD_DIR/nim-$BRANCH/bin:$PATH"
+  - export NIM_LIB_PREFIX=$TRAVIS_BUILD_DIR/nim-$BRANCH/
+
+install:
+  - bash ./scripts/install.sh
+
+script: 
+  - nim c -d:release sk.nim
+  - bash ./scripts/functional-tests.sh
+branches:
+  except:
+    - gh-pages

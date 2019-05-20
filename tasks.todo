@@ -2,7 +2,6 @@ Tools:
   ☐ VCF2JSON
   ☐ VCF2TAB
 
-
 VCF2JSON:
   ☐ Add GT decoder → Genotype array
   ☐ Warn user about supplying region when pipeing in (no index)
