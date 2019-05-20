@@ -11,7 +11,7 @@ install:
   - bash ./scripts/install.sh
 
 script: 
-  - nim c -d:release sk.nim
+  - nim c -d:release --cc:$CC sk.nim
   - bash ./scripts/functional-tests.sh
 branches:
   except:
