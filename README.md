@@ -1,4 +1,4 @@
-# seq-kit
+# seq-collection
 
 A collection of useful sequencing utilities.
 
