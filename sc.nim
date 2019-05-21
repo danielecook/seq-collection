@@ -15,27 +15,32 @@ import sequtils
 import terminal
 from constants import ANN_header
 
-proc print_error*(msg: string) =
+proc quit_error*(msg: string, error_code = 1) =
     stderr.write_line "Error".bgWhite.fgRed & fmt": {msg}".fgRed
+    quit(error_code)
+
+proc print_error*(msg: string) =
+    stderr.write_line "\nError".bgWhite.fgRed & fmt": {msg}\n".fgRed
     
 proc get_vcf_it(vcf: VCF): iterator(): Variant =
   return iterator(): Variant =
     for i in vcf:
       yield i
 
-iterator variants*(vcf:VCF, region:string): Variant =
-  ## iterator over region or just the variants.
-  if region == "" or region == "nil":
-    for v in vcf: yield v
-  elif fileExists(region):
-    ## must be in bed format.
-    for l in region.lines:
-      if l[0] == '#' or l.strip().len == 0: continue
-      var toks = l.strip().split(seps={'\t'})
-      for v in vcf.query(&"{toks[0]}:{parseInt(toks[1]) + 1}-{toks[2]}"):
-        yield v
-  else:
-    for v in vcf.query(region): yield v
+iterator variants*(vcf:VCF, regions: seq[string]): Variant =
+    ## iterator over region or just the variants.
+    if regions.len == 0:
+        for v in vcf: yield v
+    for region in regions:
+        if fileExists(region):
+            ## must be in bed format.
+            for l in region.lines:
+                if l[0] == '#' or l.strip().len == 0: continue
+                var toks = l.strip().split(seps={'\t'})
+                for v in vcf.query(&"{toks[0]}:{parseInt(toks[1]) + 1}-{toks[2]}"):
+                    yield v
+        else:
+            for v in vcf.query(region): yield v
 
 var fmt_zip = newJObject()
 var fmt_arr = newJArray()
@@ -73,7 +78,7 @@ proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[strin
         return fmt_arr
 
 
-proc to_json(vcf: string, region: string, sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool) =
+proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool) =
     var v:VCF
 
     ## Format Fields
@@ -90,10 +95,9 @@ proc to_json(vcf: string, region: string, sample_set: string, info: string, form
         set_samples(v, samples_keep)
     var samples = v.samples
 
-
     if array:
         echo "["
-    for rec in variants(v, region):
+    for rec in variants(v, region_list):
         var info = rec.info
         var format = rec.format
         # Fetch INFO Fields
@@ -155,12 +159,12 @@ proc to_json(vcf: string, region: string, sample_set: string, info: string, form
         var jnode = newJObject()
         var variant = newJObject()
         var j = %* { "CHROM": $rec.CHROM,
-                     "POS": rec.POS,
-                     "ID": $rec.ID,
-                     "REF": rec.REF,
-                     "ALT": rec.ALT,
-                     "QUAL": rec.QUAL,
-                     "FILTER": rec.FILTER.split(";")}
+                    "POS": rec.POS,
+                    "ID": $rec.ID,
+                    "REF": rec.REF,
+                    "ALT": rec.ALT,
+                    "QUAL": rec.QUAL,
+                    "FILTER": rec.FILTER.split(";")}
         if info_keep.len > 0:
             j.add("INFO", j_info)
         if format_keep.len > 0:
@@ -186,15 +190,14 @@ proc check_file(fname: string): bool =
     return true
 
 
-var p = newParser("seq"):
+var p = newParser("sc"):
     help("Sequence data utilities")
     command("json", group="VCF"):
-        arg("vcf", nargs=1, help="VCF to convert to JSON")
-        arg("region", nargs=1, help="Region")
+        arg("vcf", nargs = 1, help="VCF to convert to JSON")
+        arg("region", nargs = -1, help="List of regions")
         option("-i", "--info", help="comma-delimited INFO fields; Use 'ALL' for everything", default="")
         option("-f", "--format", help="comma-delimited FORMAT fields; Use 'ALL' for everything", default="")
         option("-s", "--samples", help="Set Samples", default="ALL")
-        #option("-p", "--output-delimiter", help="Separater to output; Defaults to that found in first file", default="<auto>")
         flag("-p", "--pretty", help="Prettify result")
         flag("-a", "--array", help="Output as a JSON array instead of ind. JSON lines")
         flag("-z", "--zip", help="Zip sample names with FORMAT fields (e.g. {'sample1': 25, 'sample2': 34})")
@@ -215,7 +218,6 @@ var p = newParser("seq"):
         run:
             echo "G"
 
-
 # Check if input is from pipe
 var input_params = commandLineParams()
 if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
@@ -227,6 +229,12 @@ if commandLineParams().find("--help") > -1 or commandLineParams().find("-h") > -
     stderr.write p.help()
     quit()
 else:
-    var opts = p.parse(input_params)
-    p.run(input_params)
+    try:
+        var opts = p.parse(input_params)
+        p.run(input_params)
+    except UsageError as E:
+        input_params.add("-h")
+        p.run(input_params)
+    except Exception as E:
+        quit_error(E.msg)
 
