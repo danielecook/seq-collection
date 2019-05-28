@@ -194,16 +194,10 @@ proc check_file(fname: string): bool =
         return false
     return true
 
-# proc get_vcf(in_vcf: string): string =
-#     if in_vcf == "STDIN":
-#         return "-"
-#     if commandLineParams().len == 1:
-#         stderr.write p.help()
-#         quit()
-#     elif in_vcf.len == 0:
-#         print_error("No files specified")
-#         quit()
-#     return in_vcf
+proc get_vcf(vcf: string): string =
+    if vcf == "STDIN":
+        return "-"
+    return vcf
 
 var p = newParser("sc"):
     help("Sequence data utilities")
@@ -216,16 +210,11 @@ var p = newParser("sc"):
         option("-s", "--samples", help="Set Samples", default="ALL")
         flag("-p", "--pretty", help="Prettify result")
         flag("-a", "--array", help="Output as a JSON array instead of ind. JSON lines")
-        flag("-z", "--zip", help="Zip sample names with FORMAT fields (e.g. {'sample1': 25, 'sample2': 34})\n\t\t\t\tForces --format=GT")
+        flag("-z", "--zip", help="Zip sample names with FORMAT fields (e.g. {'sample1': 25, 'sample2': 34})")
         flag("-n", "--annotation", help="Parse ANN Fields")
         flag("--debug", help="Debug")
         run:
-            if opts.vcf == "STDIN":
-                opts.vcf = "-"
-            elif opts.vcf.len == 0:
-                print_error("No files specified")
-                quit()
-            to_json(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array)
+            to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array)
             quit()
     command("fasta", group="VCF"):
         help("Convert a VCF to a FASTA file")
@@ -233,13 +222,7 @@ var p = newParser("sc"):
         arg("region", nargs = -1, help="List of regions or bed files")
         option("-s", "--samples", help="Set Samples", default="ALL")
         run:
-            echo opts
-            if opts.vcf == "STDIN":
-                opts.vcf = "-"
-            elif opts.vcf.len == 0:
-                print_error("No files specified")
-                quit()
-            to_fasta(opts.vcf, opts.region, opts.samples)
+            to_fasta(get_vcf(opts.vcf), opts.region, opts.samples)
     command("filter", group="bam"):
         run:
             echo "G"
@@ -247,9 +230,13 @@ var p = newParser("sc"):
 # Check if input is from pipe
 var input_params = commandLineParams()
 if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
+    echo "ADD STIDN"
     input_params[input_params.len-1] = "STDIN"
 elif terminal.isatty(stdin) == false:
-    input_params.add("STDIN")
+    if input_params.find("-") > -1:
+       input_params[input_params.find("-")] = "STDIN"
+    else:
+        input_params.add("STDIN")
 
 if commandLineParams().len == 0:
     stderr.write p.help()
