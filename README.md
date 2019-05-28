@@ -1,6 +1,6 @@
 # seq-collection
 
-[![Build Status](https://travis-ci.org/danielecook/seq-kit.svg?branch=development)](https://travis-ci.org/danielecook/seq-kit)
+[![Build Status](https://travis-ci.org/danielecook/seq-collection.svg?branch=development)](https://travis-ci.org/danielecook/seq-collection)
 
 A collection of useful sequencing utilities.
 

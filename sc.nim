@@ -15,6 +15,9 @@ import sequtils
 import terminal
 from constants import ANN_header
 
+from posix import signal, SIG_PIPE, SIG_IGN
+signal(SIG_PIPE, SIG_IGN)
+
 proc quit_error*(msg: string, error_code = 1) =
     stderr.write_line "Error".bgWhite.fgRed & fmt": {msg}".fgRed
     quit(error_code)
@@ -84,6 +87,7 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
     ## Format Fields
     let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
     let format_keep = filterIt(format.split({',',' '}), it.len > 0)
+    
     ## Output fields
     var field_float = newSeq[float32](4)
     var field_int = newSeq[int32](4)
@@ -103,7 +107,7 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
         # Fetch INFO Fields
         var j_info = newJObject()
         let output_all_info = ("ALL" in info_keep or annotation)
-        if output_all_info or info_keep.len > 1:
+        if output_all_info or info_keep.len >= 1:
             for info_field in rec.info.fields:
                 if annotation and info_field.name == "ANN":
                     if info_field.name == "ANN":
