@@ -1,10 +1,12 @@
 # seq-collection
 
+[![Build Status](https://travis-ci.org/danielecook/seq-collection.svg?branch=development)](https://travis-ci.org/danielecook/seq-collection)
+
 A collection of useful sequencing utilities.
 
 ## Usage
 
-Install using `nim c sk.nim`
+Install using `nim c sc.nim`
 
 You will need to install a few dependencies. I will eventually create a nimble installer.
 
@@ -26,7 +28,7 @@ The `json` command can be used to parse `ANN` columns (effect annotations) by sp
 
 ```
 Usage:
-  sk json [options] vcf region
+  sc json [options] vcf region
 
 Arguments:
   vcf              VCF to convert to JSON

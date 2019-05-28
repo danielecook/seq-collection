@@ -1,36 +1,32 @@
 #!/bin/bash
-test -e ssshtest || wget -q https://raw.githubusercontent.com/ryanlayer/ssshtests/master/ssshtest
+test -e ssshtest || wget -q https://raw.githubusercontent.com/ryanlayer/ssshtest/master/ssshtest
 
 . ssshtest
 
+PARENT_DIR="`git rev-parse --show-toplevel`"
+export PATH="${PATH}:${PARENT_DIR}"
+
 set -o nounset
+run test_json sc json "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+assert_equal \"X\" "$(cat "$STDOUT_FILE" | jq '.CHROM')"
+assert_equal 17276844 "$(cat "$STDOUT_FILE" | jq '.POS')"
+assert_equal "\"PASS\"" "$(cat "$STDOUT_FILE" | jq '.FILTER[0]')"
+assert_equal 999 "$(cat "$STDOUT_FILE" | jq '.QUAL')"
+assert_equal \"T\" "$(cat "$STDOUT_FILE" | jq '.REF')"
 
-assert_equal 18 12
+run test_json_pretty sc json --pretty "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+assert_equal 13 "$(cat $STDOUT_FILE | wc -l)"
 
-# slice
-run slice_inf csv slice 5: tests/data/*.tsv
-assert_exit_code 0
-assert_no_stderr
-assert_equal "18" $(cat $STDOUT_FILE | wc -l)
-assert_in_stdout "Dodge Challenger"
+# INFO
+run single_info_item sc json --info="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+assert_equal 9836 "$(cat $STDOUT_FILE | jq '.INFO.DP')"
 
-run slice_low csv slice :3 tests/data/*.tsv
-assert_exit_code 0
-assert_no_stderr
-assert_equal "12" $(cat $STDOUT_FILE | wc -l)
-assert_in_stdout "Fiat 128"
+run multi_info_item sc json --info="DP,MQ,DP4,HOB,INDEL" "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+assert_equal 9836 "$(cat $STDOUT_FILE | jq '.INFO.DP')"
+assert_equal 60 "$(cat $STDOUT_FILE | jq '.INFO.MQ')"
+assert_equal 92 "$(cat $STDOUT_FILE | jq '.INFO.DP4[3]')"
+assert_equal 0.5 "$(cat $STDOUT_FILE | jq '.INFO.HOB')"
 
-run slice csv slice 1:3 tests/data/*.tsv
-assert_exit_code 0
-assert_no_stderr
-assert_equal "9" $(cat $STDOUT_FILE | wc -l)
-
-run slice csv slice huh:3 tests/data/*.tsv
-assert_exit_code 1
-assert_stderr
-assert_in_stderr "Malformed range"
-
-run slice_add_col csv slice -a 0:3 tests/data/*.tsv
-assert_exit_code 0
-assert_in_stdout "filename"
-assert_equal "6" $(cat $STDOUT_FILE | cut -f 1 | uniq | wc -l)
+# FORMAT
+run format_dp sc json --format="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" I:41947-41947 | jq '.FORMAT.DP|add'
+assert_equal 2094 "$(cat $STDOUT_FILE | jq '.FORMAT.DP|add')"
