@@ -14,6 +14,7 @@ import tables
 import sequtils
 import terminal
 import asyncfile
+import zip/gzipfiles
 from constants import ANN_header
 
 from posix import signal, SIG_PIPE, SIG_IGN
@@ -255,8 +256,56 @@ proc get_vcf(vcf: string): string =
         return "-"
     return vcf
 
+# Convert a stream into an iterator of lines
+proc linesIterator(stream: Stream): iterator(): string =
+  result = iterator(): string =
+    while not stream.atEnd:
+      yield stream.readLine()
+
+import tables
+
+proc fq_meta(fasta: string) =
+    let stream: Stream =
+        if fasta[^3 .. ^1] == ".gz":
+            newGZFileStream(fasta)
+        else:
+            newFileStream(fasta, fmRead)
+    if stream == nil:
+        quit_error("Unable to open file: " & fasta, 2)
+    
+    let sample_n = 20
+    var line: string
+    var barcodes = newSeq[string](sample_n)
+    var i = 0
+    while not stream.atEnd() and i < sample_n * 4:
+        line = stream.readLine()
+        if i %% 4 == 0:
+            echo line, " ", i
+            try:
+                barcodes[i.div(4)] = line.split(" ")[1].split(":")[^1]
+                echo barcodes
+            except IndexError:
+                var x = 1
+        
+        i.inc()
+
+        if i == 0:
+            # Fetch basics
+            echo "G"
+    echo barcodes.newCountTable()    
+    var most_comm_barcode = barcodes.newCountTable().largest()[0]
+    echo "MOST COMMON: ", most_comm_barcode
+    stream.close()
+
+
 var p = newParser("sc"):
     help("Sequence data utilities")
+    command("fq-meta", group="FASTQ"):
+        help("Output metadata for FASTQ")
+        arg("fastq", nargs = 1, help="fastq file")
+        flag("header", help="Output just header")
+        run:
+            fq_meta(opts.fastq)
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -277,11 +326,13 @@ var p = newParser("sc"):
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
         arg("region", nargs = -1, help="List of regions or bed files")
         option("-s", "--samples", help="Set Samples", default="ALL")
+        option("-r", "--reference", help="Output full reference sequence")
         flag("-f", "--force", help="Force output even if genotypes are not phased")
         flag("-c", "--concat", help="Combine chromosomes into a single sequence")
+        flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
         run:
             to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
-    command("filter", group="bam"):
+    command("filter", group="BAM"):
         run:
             echo "G"
 
