@@ -1,6 +1,7 @@
 Tools:
   ☐ VCF2JSON
   ☐ VCF2TAB
+  ☐ random
 
 VCF2JSON:
   ☐ Add GT decoder → Genotype array
