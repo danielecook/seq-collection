@@ -11,10 +11,12 @@ import streams
 import hts
 import json
 import tables
+import strutils
 import sequtils
 import terminal
 import asyncfile
 import zip/gzipfiles
+import src/fqmeta
 from constants import ANN_header
 
 from posix import signal, SIG_PIPE, SIG_IGN
@@ -264,7 +266,7 @@ proc linesIterator(stream: Stream): iterator(): string =
 
 import tables
 
-proc fq_meta(fasta: string) =
+proc fq_meta(fasta: string, sample_n = 20) =
     let stream: Stream =
         if fasta[^3 .. ^1] == ".gz":
             newGZFileStream(fasta)
@@ -273,29 +275,37 @@ proc fq_meta(fasta: string) =
     if stream == nil:
         quit_error("Unable to open file: " & fasta, 2)
     
-    let sample_n = 20
-    var line: string
-    var barcodes = newSeq[string](sample_n)
-    var i = 0
+    var
+        qual_min, qual_max: int
+        line: string
+        barcodes = newSeq[string](sample_n)
+        i = 0
+    
     while not stream.atEnd() and i < sample_n * 4:
         line = stream.readLine()
         if i %% 4 == 0:
-            echo line, " ", i
             try:
+                echo line
                 barcodes[i.div(4)] = line.split(" ")[1].split(":")[^1]
-                echo barcodes
             except IndexError:
-                var x = 1
+                discard
         
-        i.inc()
+        # Quality scores
+        if i %% 4 == 3:
+            (qual_min, qual_max) = qual_min_max(line, qual_min, qual_max)
 
-        if i == 0:
-            # Fetch basics
-            echo "G"
-    echo barcodes.newCountTable()    
+        i.inc()
+    
+    stream.close()
+
+    var fastq_scores = fastq_types.filterIt(qual_min >= it.minimum and qual_max <= it.maximum)
     var most_comm_barcode = barcodes.newCountTable().largest()[0]
     echo "MOST COMMON: ", most_comm_barcode
-    stream.close()
+    echo fastq_scores, "    ", qual_max
+    var fastq_scores_name = fastq_scores.mapIt(it.name).join(";")
+    var fastq_scores_phred = fastq_scores.mapIt(it.phred).join(";")
+    echo fastq_scores_name
+    echo fastq_scores_phred
 
 
 var p = newParser("sc"):
@@ -303,9 +313,10 @@ var p = newParser("sc"):
     command("fq-meta", group="FASTQ"):
         help("Output metadata for FASTQ")
         arg("fastq", nargs = 1, help="fastq file")
+        option("-n", "--lines", help="Number of sequences to sample for qual and index/barcode analysis", default = "20")
         flag("header", help="Output just header")
         run:
-            fq_meta(opts.fastq)
+            fq_meta(opts.fastq, parseInt(opts.lines))
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
