@@ -3,9 +3,8 @@
 #
 import sugar
 import argparse
-import colorize
 import strformat
-import strutils
+import colorize
 import tables
 import streams
 import hts
@@ -17,18 +16,12 @@ import terminal
 import asyncfile
 import zip/gzipfiles
 import src/fqmeta
+import src/utils
 from constants import ANN_header
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
-proc quit_error*(msg: string, error_code = 1) =
-    stderr.write_line fmt"Error {error_code}".bgWhite.fgRed & fmt": {msg}".fgRed
-    quit(error_code)
-
-proc print_error*(msg: string) =
-    stderr.write_line "\nError".bgWhite.fgRed & fmt": {msg}\n".fgRed
-    
 proc get_vcf_it(vcf: VCF): iterator(): Variant =
   return iterator(): Variant =
     for i in vcf:
