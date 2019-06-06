@@ -47,7 +47,7 @@ var fmt_arr = newJArray()
 let null_json = newJNull()
 
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
-    ## For fascilitating formatting FORMAT fields
+    # For fascilitating formatting FORMAT fields
     var 
         idx_start: int
         idx_end: int
@@ -240,11 +240,6 @@ proc to_fasta(vcf: string, region_list: seq[string], sample_set: string, force: 
                 n_chrom.inc()
             n_sample.inc()
 
-proc check_file(fname: string): bool =
-    if not fileExists(fname):
-        print_error(fmt"{fname} does not exist or is not readable")
-        return false
-    return true
 
 proc get_vcf(vcf: string): string =
     if vcf == "STDIN":
