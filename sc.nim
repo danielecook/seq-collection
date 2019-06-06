@@ -254,57 +254,22 @@ proc linesIterator(stream: Stream): iterator(): string =
 
 import tables
 
-proc fq_meta(fasta: string, sample_n = 20) =
-    let stream: Stream =
-        if fasta[^3 .. ^1] == ".gz":
-            newGZFileStream(fasta)
-        else:
-            newFileStream(fasta, fmRead)
-    if stream == nil:
-        quit_error("Unable to open file: " & fasta, 2)
-    
-    var
-        qual_min, qual_max: int
-        line: string
-        barcodes = newSeq[string](sample_n)
-        i = 0
-    
-    while not stream.atEnd() and i < sample_n * 4:
-        line = stream.readLine()
-        if i %% 4 == 0:
-            try:
-                echo line
-                barcodes[i.div(4)] = line.split(" ")[1].split(":")[^1]
-            except IndexError:
-                discard
-        
-        # Quality scores
-        if i %% 4 == 3:
-            (qual_min, qual_max) = qual_min_max(line, qual_min, qual_max)
-
-        i.inc()
-    
-    stream.close()
-
-    var fastq_scores = fastq_types.filterIt(qual_min >= it.minimum and qual_max <= it.maximum)
-    var most_comm_barcode = barcodes.newCountTable().largest()[0]
-    echo "MOST COMMON: ", most_comm_barcode
-    echo fastq_scores, "    ", qual_max
-    var fastq_scores_name = fastq_scores.mapIt(it.name).join(";")
-    var fastq_scores_phred = fastq_scores.mapIt(it.phred).join(";")
-    echo fastq_scores_name
-    echo fastq_scores_phred
-
-
 var p = newParser("sc"):
     help("Sequence data utilities")
     command("fq-meta", group="FASTQ"):
         help("Output metadata for FASTQ")
-        arg("fastq", nargs = 1, help="fastq file")
+        arg("fastq", nargs = -1, help="List of FASTQ files")
         option("-n", "--lines", help="Number of sequences to sample for qual and index/barcode analysis", default = "20")
-        flag("header", help="Output just header")
+        flag("--header", help="Output just header")
         run:
-            fq_meta(opts.fastq, parseInt(opts.lines))
+            if opts.header:
+                # Allow user to output just the header if desired
+                echo fq.header
+            elif opts.fastq.len == 0:
+                quit_error("No FASTQ specified", 3)
+            if opts.fastq.len > 0:
+                for fastq in opts.fastq:
+                    fq.fq_meta(fastq, parseInt(opts.lines))
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
