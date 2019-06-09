@@ -1,3 +1,9 @@
+General:
+  ☐ Fetch test datasets 
+
+FQ-Meta
+  ☐ Fetch information on SRR/SRA data from API?
+
 Tools:
   ☐ VCF2JSON
   ☐ VCF2TAB

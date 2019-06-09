@@ -6,7 +6,6 @@ import argparse
 import strformat
 import colorize
 import tables
-import streams
 import hts
 import json
 import tables
@@ -15,7 +14,7 @@ import sequtils
 import terminal
 import asyncfile
 import zip/gzipfiles
-import src/fqmeta
+import src/fq
 import src/utils
 from constants import ANN_header
 
@@ -259,7 +258,7 @@ var p = newParser("sc"):
     command("fq-meta", group="FASTQ"):
         help("Output metadata for FASTQ")
         arg("fastq", nargs = -1, help="List of FASTQ files")
-        option("-n", "--lines", help="Number of sequences to sample for qual and index/barcode analysis", default = "20")
+        option("-n", "--lines", help="Number of sequences to sample (n_lines) for qual and index/barcode determination", default = "100")
         flag("--header", help="Output just header")
         run:
             if opts.header:
@@ -320,6 +319,6 @@ else:
     except UsageError as E:
         input_params.add("-h")
         p.run(input_params)
-    #except Exception as E:
-    #    quit_error(E.msg)
+    except Exception as E:
+        quit_error(E.msg)
 
