@@ -9,6 +9,9 @@ Tools:
   ☐ VCF2TAB
   ☐ random
 
+FQMeta:
+  ☐ Handle SRA queries
+
 VCF2JSON:
   ☐ Add GT decoder → Genotype array
   ☐ Warn user about supplying region when pipeing in (no index)

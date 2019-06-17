@@ -254,6 +254,7 @@ proc linesIterator(stream: Stream): iterator(): string =
 import tables
 
 var p = newParser("sc"):
+    flag("--debug", help="Debug")
     help("Sequence data utilities")
     command("fq-meta", group="FASTQ"):
         help("Output metadata for FASTQ")
@@ -302,7 +303,6 @@ var p = newParser("sc"):
 # Check if input is from pipe
 var input_params = commandLineParams()
 if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
-    echo "ADD STIDN"
     input_params[input_params.len-1] = "STDIN"
 elif terminal.isatty(stdin) == false:
     if input_params.find("-") > -1:
@@ -318,7 +318,12 @@ else:
         p.run(input_params)
     except UsageError as E:
         input_params.add("-h")
-        p.run(input_params)
+        if input_params.find("--debug") > -1:
+            p.run(input_params)
     except Exception as E:
-        quit_error(E.msg)
+        if commandLineParams().find("--debug") > -1:
+            stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
+            raise
+        else:
+            quit_error(E.msg)
 

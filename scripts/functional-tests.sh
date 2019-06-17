@@ -30,3 +30,21 @@ assert_equal 0.5 "$(cat $STDOUT_FILE | jq '.INFO.HOB')"
 # FORMAT
 run format_dp sc json --format="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" I:41947-41947 | jq '.FORMAT.DP|add'
 assert_equal 2094 "$(cat $STDOUT_FILE | jq '.FORMAT.DP|add')"
+
+
+# fq-meta
+curl https://raw.githubusercontent.com/10XGenomics/supernova/master/tenkit/lib/python/tenkit/illumina_instrument.py | \
+        grep -v 'import martian' | \
+        sed 's/martian.exit/exit/g' > illumina_instrument.py
+
+function test_fq() {
+    gzip -c $1 > test.fq.gz
+    python -c "import illumina_instrument as ia; print(ia.sequencer_detection_message(['test.fq.gz']))"
+}
+
+# Genome Analyzer II
+run fq_meta sc fq-meta tests/fastq/illumina_1.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 7)" \
+             "$(test_fq tests/fastq/illumina_1.fq | egrep -o "Genome Analyzer IIx" | uniq)"
+assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
+             "$(test_fq tests/fastq/illumina_1.fq | egrep -o "likely" | uniq)"
