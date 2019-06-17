@@ -97,34 +97,6 @@ proc qual_min_max*(quality_scores: string, prev_min: int, prev_max: int): (int, 
         qual_scores = qual_scores.concat(@[prev_min, prev_max])
     return (qual_scores.min(), qual_scores.max())
 
-# infer sequencer from ids from single fastq
-# def infer_sequencer(iid, fcid):
-#     seq_by_iid = []
-#     for key in InstrumentIDs:
-#         if re.search(key,iid): 
-#             seq_by_iid += InstrumentIDs[key]
-#     seq_by_fcid = []
-#     for key in FCIDs:
-#         if re.search(key,fcid):
-#             seq_by_fcid += FCIDs[key][0]
-#     sequencers = []
-#     # if both empty
-#     if not seq_by_iid and not seq_by_fcid:
-#         return sequencers, "fail"
-#     # if one non-empty
-#     if not seq_by_iid:
-#         return seq_by_fcid, "likely"
-#     if not seq_by_fcid:
-#         return seq_by_iid, "likely"
-#     # if neither empty
-#     sequencers = intersect(seq_by_iid, seq_by_fcid)
-#     if sequencers:
-#         return sequencers, "high"
-#     # this should not happen, but if both ids indicate different sequencers..
-#     else: 
-#         sequencers = union(seq_by_iid, seq_by_fcid)
-#         return sequencers, "uncertain"
-
 proc union(a: seq[string], b: seq[string]): seq[string] =
     return a.concat(b).deduplicate()
 

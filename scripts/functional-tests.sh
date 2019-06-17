@@ -48,3 +48,14 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 7)" \
              "$(test_fq tests/fastq/illumina_1.fq | egrep -o "Genome Analyzer IIx" | uniq)"
 assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
              "$(test_fq tests/fastq/illumina_1.fq | egrep -o "likely" | uniq)"
+
+run fq_meta2 sc fq-meta tests/fastq/illumina_2.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 7)" \
+             "$(test_fq tests/fastq/illumina_2.fq | egrep -o "Genome Analyzer IIx" | uniq)"
+assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
+             "$(test_fq tests/fastq/illumina_2.fq | egrep -o "likely" | uniq)"
+
+# Unresolvable
+run sc fq_meta tests/fastq/illumina_3.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 7)" ""
+assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" ""
