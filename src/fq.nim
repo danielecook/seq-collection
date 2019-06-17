@@ -126,7 +126,7 @@ proc detect_sequencer(machine: string, flowcell: string): (seq[string], string) 
 
     # Both empty
     if concat(seq_by_iid, seq_by_fcid).len == 0:
-        return (@[], "fail")
+        return (@[], "")
     
     if seq_by_iid.len == 0:
         return (seq_by_fcid, "likely:flowcell")
@@ -140,7 +140,7 @@ proc detect_sequencer(machine: string, flowcell: string): (seq[string], string) 
     else:
         return (union(seq_by_iid, seq_by_fcid), "uncertain")
 
-    return (@[], "fail")
+    return (@[], "")
 
 
 

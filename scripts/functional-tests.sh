@@ -55,7 +55,20 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 7)" \
 assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
              "$(test_fq tests/fastq/illumina_2.fq | egrep -o "likely" | uniq)"
 
-# Unresolvable
-run sc fq_meta tests/fastq/illumina_3.fq
+# Unresolvable; This FASTQ is from wikipedia...
+run fq_meta3 sc fq-meta tests/fastq/illumina_3.fq
 assert_equal "$(cat $STDOUT_FILE | cut -f 7)" ""
 assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" ""
+assert_equal "$(test_fq tests/fastq/illumina_3.fq | egrep -o 'could not detect')" "could not detect"
+
+run fq_meta4 sc fq-meta tests/fastq/illumina_4.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 7)" ""
+assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" ""
+assert_equal "$(test_fq tests/fastq/illumina_4.fq | egrep -o 'could not detect')" "could not detect"
+
+# HiSeq X
+run fq_meta5 sc fq-meta tests/fastq/illumina_5.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 7)" "HiSeq X"
+assert_equal "$(cat $STDOUT_FILE | cut -f 8)" "high:flowcell"
+assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
+             "$(test_fq tests/fastq/illumina_5.fq | egrep -o "high" | uniq)"
