@@ -49,8 +49,13 @@ sc fq-meta --header > my_fq_database.txt # Use this to output just the variable 
 parallel -j 8 sc fq-meta ::: find . -name '*.fq.gz' >> my_fq_database.txt
 ```
 
+#### Input
+
+`fq-meta` accepts both gzipped FASTQs (`.fq.gz`, `.fastq.gz` ~ inferred from `.gz` extension) and raw text FASTQs.
+
 #### Example Output
 
+##### Columns
 
 
 #### Assembling an FQ-Database
@@ -86,3 +91,32 @@ Options:
   -h, --help                 Show this help
 ```
 
+#### Example
+
+```
+sc json --format=GT --zip --pretty tests/data/test.vcf.gz
+```
+
+Outputs:
+
+```json
+{
+  "CHROM": "I",
+  "POS": 41947,
+  "ID": ".",
+  "REF": "A",
+  "ALT": [
+    "T"
+  ],
+  "QUAL": 999.0,
+  "FILTER": [
+    "PASS"
+  ],
+  "FORMAT": {
+    "GT": {
+      "AB1": [
+        2,
+        2
+      ],
+      ...
+```
