@@ -42,7 +42,7 @@ sc fq-meta *.fq.gz >> my_fq_database.txt
 
 The resulting dataset can be combined with other metadata and filtered to select samples for processing in a pipeline.
 
-You can also parallelize the operation with (GNU-parallel)[https://www.gnu.org/software/parallel/].
+You can also parallelize the operation with [GNU-parallel](https://www.gnu.org/software/parallel/).
 
 ```bash
 sc fq-meta --header > my_fq_database.txt # Use this to output just the variable names
@@ -118,5 +118,5 @@ Outputs:
         2,
         2
       ],
-      ...
+      …
 ```
