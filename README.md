@@ -22,7 +22,7 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
 
 ### fq-meta
 
-__Scenario:__ - You are given an old dusty hard drive packed with sequence data. Your collaborator says "We have some great sequencing data here, if only someone could analyze it." You peek at the filesystem and discover that FASTQs have been renamed, removing crucial information about how they were generated. Your collaborator, however, recalls certain details about which data was sequenced on which sequencer and he has a list of sequencing barcodes and associated samples that you can match on."
+__Scenario:__ - You are given an old dusty hard drive packed with sequence data. Your collaborator says "We have some great sequencing data here, if only someone could analyze it." You peek at the filesystem and discover that FASTQs have been renamed, removing crucial information about how they were generated. Your collaborator, however, recalls certain details about which data was sequenced on which sequencer and he has a list of sequencing barcodes and associated samples that you can match on." If only there was a way to determine the barcodes, sequencer, or other essential metadata for each FASTQ...
 
 If this scenerio sounds familiar, `fq-meta`™ is for you. It samples the first few sequences of a FASTQ and outputs a summary including:
 
