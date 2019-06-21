@@ -43,32 +43,49 @@ function test_fq() {
 }
 
 # Genome Analyzer II
-run fq_meta sc fq-meta tests/fastq/illumina_1.fq
-assert_equal "$(cat $STDOUT_FILE | cut -f 7)" \
-             "$(test_fq tests/fastq/illumina_1.fq | egrep -o "Genome Analyzer IIx" | uniq)"
-assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
+run fq_meta_genome_analyzer1 sc fq-meta tests/fastq/illumina_1.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" \
+             "$(test_fq tests/fastq/illumina_1.fq | egrep -o "Genome Analyzer IIx" | uniq | sed 's/ //g')"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
              "$(test_fq tests/fastq/illumina_1.fq | egrep -o "likely" | uniq)"
 
-run fq_meta2 sc fq-meta tests/fastq/illumina_2.fq
-assert_equal "$(cat $STDOUT_FILE | cut -f 7)" \
-             "$(test_fq tests/fastq/illumina_2.fq | egrep -o "Genome Analyzer IIx" | uniq)"
-assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
+run fq_meta_genome_analyzer2 sc fq-meta tests/fastq/illumina_2.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" \
+             "$(test_fq tests/fastq/illumina_2.fq | egrep -o "Genome Analyzer IIx" | uniq | sed 's/ //g')"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
              "$(test_fq tests/fastq/illumina_2.fq | egrep -o "likely" | uniq)"
 
 # Unresolvable; This FASTQ is from wikipedia...
 run fq_meta3 sc fq-meta tests/fastq/illumina_3.fq
-assert_equal "$(cat $STDOUT_FILE | cut -f 7)" ""
-assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" ""
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" ""
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" ""
 assert_equal "$(test_fq tests/fastq/illumina_3.fq | egrep -o 'could not detect')" "could not detect"
 
 run fq_meta4 sc fq-meta tests/fastq/illumina_4.fq
-assert_equal "$(cat $STDOUT_FILE | cut -f 7)" ""
-assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" ""
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" ""
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" ""
 assert_equal "$(test_fq tests/fastq/illumina_4.fq | egrep -o 'could not detect')" "could not detect"
 
+run fq_meta_hiseq_2000_2500 sc fq-meta tests/fastq/illumina_2000_2500.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" "HiSeq2000/2500"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" \
+             "$(test_fq tests/fastq/illumina_2000_2500.fq | egrep -o "HiSeq2000/2500" | uniq)"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
+             "$(test_fq tests/fastq/illumina_2000_2500.fq | egrep -o 'high' )"
+
+# HiSeq 4000
+run fq_meta_hiseq_4000 sc fq-meta tests/fastq/illumina_3000_4000.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" "HiSeq3000/4000"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" \
+             "$(test_fq tests/fastq/illumina_3000_4000.fq | egrep -o "HiSeq3000/4000" | uniq)"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
+             "$(test_fq tests/fastq/illumina_3000_4000.fq | egrep -o 'high')"
+
 # HiSeq X
-run fq_meta5 sc fq-meta tests/fastq/illumina_5.fq
-assert_equal "$(cat $STDOUT_FILE | cut -f 7)" "HiSeq X"
-assert_equal "$(cat $STDOUT_FILE | cut -f 8)" "high:flowcell"
-assert_equal "$(cat $STDOUT_FILE | cut -f 8 | cut -f 1 -d ':')" \
-             "$(test_fq tests/fastq/illumina_5.fq | egrep -o "high" | uniq)"
+run fq_meta_hiseq_x sc fq-meta tests/fastq/illumina_hiseq_x.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" "HiSeqX"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
+             "$(test_fq tests/fastq/illumina_hiseq_x.fq | egrep -o 'high')"

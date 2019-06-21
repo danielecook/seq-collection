@@ -2,3 +2,7 @@ nimcache/
 .DS_Store
 *.pyc
 .vscode/
+tut
+ssshtest
+.Rhistory
+.python-version
