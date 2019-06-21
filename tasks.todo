@@ -1,6 +1,19 @@
+General:
+  ☐ Fetch test datasets 
+
+FQ-Meta
+  ☐ Fetch information on SRR/SRA data from API?
+
 Tools:
   ☐ VCF2JSON
   ☐ VCF2TAB
+  ☐ random
+
+FQMeta:
+  ☐ Handle SRA queries / Format
+
+https://www.ncbi.nlm.nih.gov/books/NBK25499/
+https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id=SRR015141&retmode=xml
 
 VCF2JSON:
   ☐ Add GT decoder → Genotype array
