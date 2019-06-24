@@ -302,9 +302,7 @@ var p = newParser("sc"):
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
-    input_params[input_params.len-1] = "STDIN"
-elif terminal.isatty(stdin) == false:
+if getFileInfo(stdin).id.file==37:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:
