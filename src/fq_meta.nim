@@ -1,12 +1,12 @@
 import sequtils
 import strutils
-import gz
+import utils/gz
 import os
 import re
 import sets
 import streams
 import zip/gzipfiles
-import utils
+import utils/helpers
 
 const qual = """!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
 const header* = ["machine",

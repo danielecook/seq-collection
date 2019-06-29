@@ -14,8 +14,9 @@ import sequtils
 import terminal
 import asyncfile
 import zip/gzipfiles
-import src/fq
-import src/utils
+import src/fq_meta
+import src/index_swap
+import src/utils/helpers
 from constants import ANN_header
 
 from posix import signal, SIG_PIPE, SIG_IGN
@@ -264,12 +265,12 @@ var p = newParser("sc"):
         run:
             if opts.header:
                 # Allow user to output just the header if desired
-                echo fq.header
+                echo fq_meta.header
             elif opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq.fq_meta(fastq, parseInt(opts.lines))
+                    fq_meta(fastq, parseInt(opts.lines))
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -284,7 +285,6 @@ var p = newParser("sc"):
         flag("--debug", help="Debug")
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array)
-            quit()
     command("fasta", group="VCF"):
         help("Convert a VCF to a FASTA file")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -296,9 +296,14 @@ var p = newParser("sc"):
         flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
         run:
             to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
-    command("filter", group="BAM"):
+    command("index-swap", group="BAM"):
+        arg("BAM", nargs= -1, help="List of Bams to Compare")
+        option("-s", "--sites", help="List of sites to check")
+        option("-f", "--fasta", help="Reference")
+        option("-t", "--threads", default="1", help="Threads")
+        flag("-d", "--debug", help="Debug")
         run:
-            echo "G"
+            index_swaps(opts.BAM, opts.sites, opts.fasta, opts.debug, parseInt(opts.threads))
 
 # Check if input is from pipe
 var input_params = commandLineParams()
