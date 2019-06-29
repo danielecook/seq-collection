@@ -133,3 +133,10 @@ Outputs:
   }
 }
 ```
+
+
+## Compilation
+
+```
+nim c --cpu:i386 --os:linux --threads:on --compileOnly sc.nim
+```

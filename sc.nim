@@ -297,13 +297,12 @@ var p = newParser("sc"):
         run:
             to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
     command("index-swap", group="BAM"):
-        arg("BAM", nargs= -1, help="List of Bams to Compare")
-        option("-s", "--sites", help="List of sites to check")
-        option("-f", "--fasta", help="Reference")
+        arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
+        option("-s", "--sites", help="List of sites to check (required)")
+        option("-f", "--fasta", help="Reference for use with CRAM files")
         option("-t", "--threads", default="1", help="Threads")
-        flag("-d", "--debug", help="Debug")
         run:
-            index_swaps(opts.BAM, opts.sites, opts.fasta, opts.debug, parseInt(opts.threads))
+            index_swaps(opts.BAM, opts.sites, opts.fasta, parseInt(opts.threads))
 
 # Check if input is from pipe
 var input_params = commandLineParams()
@@ -313,9 +312,9 @@ if getFileInfo(stdin).id.file==37:
     else:
         input_params.add("STDIN")
 
-if commandLineParams().len == 0:
-    stderr.write p.help()
-    quit()
+if commandLineParams().len <= 1:
+    input_params.add("-h")
+    p.run(input_params)
 else:
     try:
         p.run(input_params)

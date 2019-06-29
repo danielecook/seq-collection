@@ -6,6 +6,8 @@ import stats
 import strutils
 import algorithm
 import strformat
+import progress
+from ../fq_meta import extract_read_info
 
 type Site* = object
   ref_allele*: char
@@ -37,30 +39,39 @@ template proportion_other(c:count): float =
   if c.nother == 0: 0'f else: c.nother.float / (c.nother + c.nref + c.nalt).float
 
 proc alts*(c:count, min_depth:int): int8 {.inline.} =
+  ## These numbers modified as we are only interested
+  ## in contaminated "ref-like" sites and homozygous alts.
   ## give an estimate of number of alts from counts of ref and alt
-  ## AB < 0.15 is called as hom-ref
-  ## AB > 0.75 is hom-alt
-  ## 0.15 <= AB <= 0.75 is het
+  ## AB < 0.30 is called as hom-ref
+  ## AB > 0.98 is hom-alt
+  ## 0.30 <= AB <= 0.99 is het
+  ##
+  ## 0 = HOM REF
+  ## 1 = HET
+  ## 2 = HOM ALT
+  ## 3 = CONTAMINATED REF
+  ##
   if c.proportion_other > 0.04: return -1
   if int(c.nref + c.nalt) < min_depth:
     return -1
   if c.nalt == 0:
     return 0
 
+  # ab befow is the allele freq of the alt allele
   var ab = c.ab
   # "Contaminated" sites or seq. errors on reference
-  if ab > 0.0 and ab < 0.15:
+  if ab > 0.0 and ab < 0.30:
     return 3
-  elif ab > 0.85:
-    return 2
+  elif ab > 0.98:
+    return 2 # HOM ALT
 
-  #if ab < 0.2 or ab > 0.8: return -1 # exclude mid-range hets.
-
+  # Anything else is a 'het' and is ignored
   return 1
 
 proc count_alleles(b:Bam, site:Site): count {.inline.} =
+    # Incr. mapping quality for site from 10 to 30
   for aln in b.query(site.chrom, site.position, site.position + 1):
-    if aln.mapping_quality < 10: continue
+    if aln.mapping_quality < 30: continue
     var off = aln.start
     var qoff = 0
     var roff_only = 0
@@ -90,11 +101,13 @@ proc count_alleles(b:Bam, site:Site): count {.inline.} =
         result.nother += 1
 
 
-proc get_alts(bam:Bam, sites:seq[Site], nalts: ptr seq[int8], alt_depth: ptr seq[int], alt_alleles: ptr seq[int], depth: ptr seq[int], stat: ptr Stat4, min_depth:int=6): bool =
+proc get_alts(bam:Bam, sites:seq[Site], nalts: ptr seq[int8], alt_depth: ptr seq[int], alt_alleles: ptr seq[int], depth: ptr seq[int], stat: ptr Stat4, min_depth:int=6, progress: ptr ProgressBar): bool =
   ## count alternate alleles in a single bam at each site.
   for i, site in sites:
     if i mod 1000 == 0:
-      stderr.write_line fmt"{bam.hts.fn} - {i}"
+        # Update progress bar
+        if progress.isComplete() == false:
+            progress.tick(1000)
     var c = bam.count_alleles(site)
     alt_depth[i] = c.nalt.int
     depth[i] = int(c.nref + c.nalt + c.nother)
@@ -111,13 +124,13 @@ proc get_alts(bam:Bam, sites:seq[Site], nalts: ptr seq[int8], alt_depth: ptr seq
     
 
 
-proc get_bam_alts*(path:string, fai:string, sites:seq[Site], nalts: ptr seq[int8], alt_depth: ptr seq[int], alt_alleles: ptr seq[int], depth: ptr seq[int], stat: ptr Stat4, min_depth:int=6): bool =
+proc get_bam_alts*(path:string, fai:string, sites:seq[Site], nalts: ptr seq[int8], alt_depth: ptr seq[int], alt_alleles: ptr seq[int], depth: ptr seq[int], stat: ptr Stat4, min_depth:int=6, progress: ptr ProgressBar): bool =
   var bam: Bam
   if not open(bam, path, fai=fai):
     quit "couldn't open :" & $path
   bam.load_index(path & ".bai")
   discard bam.set_option(FormatOption.CRAM_OPT_REQUIRED_FIELDS, 8191 - SAM_QUAL.int - SAM_QNAME.int - SAM_RNAME.int)
-  result = bam.get_alts(sites, nalts, alt_depth, alt_alleles, depth, stat, min_depth)
+  result = bam.get_alts(sites, nalts, alt_depth, alt_alleles, depth, stat, min_depth, progress)
   bam.close()
 
 proc siteOrder(a:Site, b:Site): int =
@@ -177,13 +190,16 @@ proc get_sample_names*(path: string): seq[string] =
   if path.bam_like:
     var bam: Bam
     open(bam, path)
-    for line in bam:
-        echo $line
-        echo $path
-        break
     var txt = newString(bam.hdr.hdr.l_text)
     copyMem(txt[0].addr, bam.hdr.hdr.text, txt.len)
     for line in txt.split("\n"):
       if line.startsWith("@RG") and "\tSM:" in line:
         var t = line.split("\tSM:")[1].split("\t")[0].strip()
         return @[t]
+
+proc get_sample_flowcells*(path: string): string =
+    if path.bam_like:
+        var bam: Bam
+        open(bam, path)
+        for line in bam:
+            return extract_read_info(line.qname)[4]
