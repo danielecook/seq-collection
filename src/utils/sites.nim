@@ -42,9 +42,9 @@ proc alts*(c:count, min_depth:int): int8 {.inline.} =
   ## These numbers modified as we are only interested
   ## in contaminated "ref-like" sites and homozygous alts.
   ## give an estimate of number of alts from counts of ref and alt
-  ## AB < 0.30 is called as hom-ref
+  ## AB < 0.15 is called as hom-ref
   ## AB > 0.98 is hom-alt
-  ## 0.30 <= AB <= 0.99 is het
+  ## 0.15 <= AB <= 0.98 is het
   ##
   ## 0 = HOM REF
   ## 1 = HET
@@ -60,7 +60,7 @@ proc alts*(c:count, min_depth:int): int8 {.inline.} =
   # ab befow is the allele freq of the alt allele
   var ab = c.ab
   # "Contaminated" sites or seq. errors on reference
-  if ab > 0.0 and ab < 0.30:
+  if ab > 0.0 and ab < 0.15:
     return 3
   elif ab > 0.98:
     return 2 # HOM ALT
@@ -71,7 +71,7 @@ proc alts*(c:count, min_depth:int): int8 {.inline.} =
 proc count_alleles(b:Bam, site:Site): count {.inline.} =
     # Incr. mapping quality for site from 10 to 30
   for aln in b.query(site.chrom, site.position, site.position + 1):
-    if aln.mapping_quality < 30: continue
+    if aln.mapping_quality < 10: continue
     var off = aln.start
     var qoff = 0
     var roff_only = 0
