@@ -166,7 +166,7 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
                                  $af,
                                  $alt_alleles[i][site_n],
                                  $depth[i][site_n],
-                                 $( if pool_total_depth > 0: (pool_alt_depth.float / pool_total_depth.float) else: "NA"),
+                                 $(pool_alt_depth.float / pool_total_depth.float),
                                  $pool_alt_depth,
                                  $pool_total_depth,
                                  $(gt_counts[0]),
