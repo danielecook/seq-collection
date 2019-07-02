@@ -14,6 +14,7 @@ import strformat
 import threadpool
 import stats
 import progress
+import tables
 
 type alt_error* = object
     alt*: RunningStat
@@ -24,7 +25,7 @@ type alt_contamination* = object
     alt*: RunningStat # apparent alt calls in ref case
     dp*: RunningStat # depth of genotyped sites in ref case value
     af*: RunningStat # AF; alt/dp
-    alt_load*: RunningStat # Alt bases found in other samples that are apparent het/hom alt.
+    pool_alt_depth*: RunningStat # Alt bases found in other samples that are apparent het/hom alt.
 
 proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads: int) =
     
@@ -92,12 +93,17 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
                         "site",
                         "ref",
                         "alt",
-                        "af",
-                        "alt_reads",
-                        "total_depth",
-                        "n_het",
-                        "n_hom_alt",
-                        "alt_load",
+                        "sample_af",
+                        "sample_alt_reads",
+                        "sample_depth",
+                        "pool_af",
+                        "pool_alt_depth",
+                        "pool_total_depth",
+                        "pool_ref",
+                        "pool_ref_contaminated",
+                        "pool_het",
+                        "pool_alt",
+                        "pool_fail",
                         "group",
                         "flowcell"].join("\t")
     echo header_line
@@ -106,11 +112,13 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
         # Pull out 'reference-like' sites
         # Infer that ALT
 
+        ## -1 = Below min-depth threshhold
         ## 0 = HOM REF
         ## 1 = HET
         ## 2 = HOM ALT
         ## 3 = CONTAMINATED REF 
 
+        ## Population 
 
         # if all(lc[(results[i][site_n] in [0,3]) | (i <- 0..<n_samples), bool], proc(x: bool): bool = return x):
         #     for i in 0..<n_samples:
@@ -118,7 +126,7 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
         #         error_stat[i].alt.push(alt_alleles[i][site_n])
         #         error_stat_aggregate.dp.push(depth[i][site_n])
         #         error_stat_aggregate.alt.push(alt_alleles[i][site_n])
-
+        var x = 1
         for i in 0..<n_samples:
             if results[i][site_n] in [0, 3]:
 
@@ -128,32 +136,29 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
                 var af = float(alt_alleles[i][site_n]) / float(depth[i][site_n])
                 contamination_stat[i].af.push(af)
 
-                var alt_load = 0
-                var het_count = 0
-                var hom_alt_count = 0
+                var pool_alt_depth = 0
+                var pool_total_depth = 0
+                var flowcell_gts: seq[int]
                 for j in 0..<n_samples:
-                    # Don't include the sample of interest!
+                    # Don't include the sample of interest
+                    # Only compare samples sequenced on the same flowcell
                     if i != j and sample_flowcells[i] == sample_flowcells[j]:
                         var gt = results[j][site_n]
+                        flowcell_gts.add gt
                         if gt in [1,2]:
-                            alt_load += alt_depth[j][site_n]
-                            if gt == 1:
-                                # gt == 1 (HET)
-                                het_count.inc()
-                            else:
-                                # gt == 2 (HOM ALT)
-                                hom_alt_count.inc()
+                            pool_alt_depth += alt_depth[j][site_n]
+                        pool_total_depth += depth[j][site_n]
+                
+                var gt_counts = newCountTable(flowcell_gts)
 
-
-
-                if alt_load > 0 and af > 0:
+                if pool_alt_depth > 0 and af > 0:
                     group = "switch"
-                elif alt_load == 0 and af > 0:
+                elif pool_alt_depth == 0 and af > 0:
                     group = "technical"
                 else:
                     group = "NA"
                 
-                contamination_stat[i].alt_load.push(alt_load)
+                contamination_stat[i].pool_alt_depth.push(pool_alt_depth)
                 var out_line = @[sample_names[i],
                                  fmt"{sitelist[site_n].chrom}:{sitelist[site_n].position}",
                                  $sitelist[site_n].ref_allele,
@@ -161,9 +166,14 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
                                  $af,
                                  $alt_alleles[i][site_n],
                                  $depth[i][site_n],
-                                 $het_count,
-                                 $hom_alt_count,
-                                 $alt_load,
+                                 $( if pool_total_depth > 0: (pool_alt_depth.float / pool_total_depth.float) else: "NA"),
+                                 $pool_alt_depth,
+                                 $pool_total_depth,
+                                 $(gt_counts[0]),
+                                 $(gt_counts[3]),
+                                 $(gt_counts[1]),
+                                 $(gt_counts[2]),
+                                 $(gt_counts[-1]),
                                  $group,
                                  sample_flowcells[i]]
                 echo out_line.join("\t")
