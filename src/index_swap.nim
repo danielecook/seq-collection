@@ -152,7 +152,7 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
                 var gt_counts = newCountTable(flowcell_gts)
 
                 if pool_alt_depth > 0 and af > 0:
-                    group = "switch"
+                    group = "index+technical"
                 elif pool_alt_depth == 0 and af > 0:
                     group = "technical"
                 else:
