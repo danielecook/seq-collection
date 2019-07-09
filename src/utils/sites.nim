@@ -9,6 +9,10 @@ import strformat
 import progress
 from ../fq_meta import extract_read_info
 
+const
+  MIN_MAPPING_QUALITY = 10
+  MIN_BASE_QUALITY = 20.uint8
+
 type Site* = object
   ref_allele*: char
   alt_allele*: char
@@ -69,9 +73,8 @@ proc alts*(c:count, min_depth:int): int8 {.inline.} =
   return 1
 
 proc count_alleles(b:Bam, site:Site): count {.inline.} =
-    # Incr. mapping quality for site from 10 to 30
   for aln in b.query(site.chrom, site.position, site.position + 1):
-    if aln.mapping_quality < 10: continue
+    if aln.mapping_quality < MIN_MAPPING_QUALITY: continue
     var off = aln.start
     var qoff = 0
     var roff_only = 0
@@ -92,13 +95,15 @@ proc count_alleles(b:Bam, site:Site): count {.inline.} =
       if over < 0: continue
       doAssert qoff - over >= 0
       var base = aln.base_at(qoff - over)
-      if base == site.ref_allele:
-        result.nref += 1
-      elif base == site.alt_allele:
-        result.nalt += 1
-      else:
-        #stderr.write_line $event, " -> over:", over, " -> ", site, " -> ", aln.tostring
-        result.nother += 1
+      var quality = aln.base_quality_at(qoff - over)
+      if quality >= MIN_BASE_QUALITY:
+        if base == site.ref_allele:
+          result.nref += 1
+        elif base == site.alt_allele:
+          result.nalt += 1
+        else:
+          #stderr.write_line $event, " -> over:", over, " -> ", site, " -> ", aln.tostring
+          result.nother += 1
 
 
 proc get_alts(bam:Bam, sites:seq[Site], nalts: ptr seq[int8], alt_depth: ptr seq[int], alt_alleles: ptr seq[int], depth: ptr seq[int], stat: ptr Stat4, min_depth:int=6, progress: ptr ProgressBar): bool =

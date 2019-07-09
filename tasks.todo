@@ -6,6 +6,7 @@ FQ-Meta
 
 Tools:
   ☐ VCF2JSON
+  ☐ Library identification through correlated coverage?
   ☐ VCF2TAB
   ☐ random
 
@@ -25,5 +26,11 @@ VCF2JSON:
 
 VCF2TAB:
   ☐ Convert VCF to tabular format ~ Wide or long
+
+Index Swap:
+  ☐ Filter by base pair (20)
+  ☐ Filter minimum mapping quality (10)
+  ☐ Minimum coverage level (10 reads)
+  ☐ Group by flowcell/lane
 
 Genome manager (a better one?):

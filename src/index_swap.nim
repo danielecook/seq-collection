@@ -159,8 +159,10 @@ proc index_swaps*(bams: seq[string], sites_path: string, fasta: string, threads:
                     group = "NA"
                 
                 contamination_stat[i].pool_alt_depth.push(pool_alt_depth)
+
+                # Positions are 0-indexed!
                 var out_line = @[sample_names[i],
-                                 fmt"{sitelist[site_n].chrom}:{sitelist[site_n].position}",
+                                 fmt"{sitelist[site_n].chrom}:{sitelist[site_n].position+1}",
                                  $sitelist[site_n].ref_allele,
                                  $sitelist[site_n].alt_allele,
                                  $af,
