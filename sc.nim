@@ -262,6 +262,7 @@ var p = newParser("sc"):
         arg("fastq", nargs = -1, help="List of FASTQ files")
         option("-n", "--lines", help="Number of sequences to sample (n_lines) for qual and index/barcode determination", default = "100")
         flag("--header", help="Output just header")
+        flag("-s", "--symlinks", help="Follow symlinks")
         run:
             if opts.header:
                 # Allow user to output just the header if desired
@@ -271,6 +272,7 @@ var p = newParser("sc"):
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
                     fq_meta(fastq, parseInt(opts.lines))
+                    fq.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
