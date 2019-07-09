@@ -271,7 +271,7 @@ var p = newParser("sc"):
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
+                    fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")

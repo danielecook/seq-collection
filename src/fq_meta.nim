@@ -151,6 +151,36 @@ proc detect_sequencer(machine: string, flowcell: string): (seq[string], string, 
     else:
         return (union(seq_by_iid, seq_by_fcid), "uncertain", "")
 
+
+proc extract_read_info*(line: string): (string, string, string, string, string) =
+    # Parses FASTQ read lines and send back output
+    var
+        qual_line = line.split({':', '/', '#'})
+        sequence_id: string
+        machine: string
+        run: string
+        lane: string
+        flowcell: string
+    
+    if qual_line.len == 1:
+        sequence_id = qual_line[0].strip(chars = {'@'})
+    elif qual_line.len > 1:
+        machine = qual_line[0].strip(chars = {'@'})
+        if '/' in line:
+            # @HWUSI-EAS100R:6:73:941:1973#ATGGGC/1
+            # machine:lane:tile:x:y#index/read
+            lane = qual_line[1]
+        else:
+            # @EAS139:136:FC706VJ:2:2104:15343:197393 1:Y:18:ATCACG 
+            # @EAS139:136:FC706VJ:2:2104:15343:197393 1:N:18:1
+            # @D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018 1:Y:0:GCTCGGTA
+            run = qual_line[1]
+            flowcell = qual_line[2]
+            if '_' in flowcell:
+                flowcell = flowcell.split("_")[^1]
+            lane = qual_line[3]
+    return (sequence_id, machine, run, lane, flowcell)
+
 proc get_sequencer_name(sequencers: seq[string]): string =
     const set1 = ["HiSeq2000", "HiSeq2500"]
     const set2 = ["HiSeq1500", "HiSeq2500"]
