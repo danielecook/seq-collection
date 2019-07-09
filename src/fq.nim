@@ -168,20 +168,10 @@ proc get_sequencer_name(sequencers: seq[string]): string =
         return sequencers[^1]
     
 
-proc fq_meta*(fastq: string, sample_n = 20) =
+proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
 
-    var basename = lastPathPart(fastq)
-    var absolute_path = absolutePath(fastq)
-
-    let stream: Stream =
-        if fastq[^3 .. ^1] == ".gz":
-            newGZFileStream(fastq)
-        else:
-            newFileStream(fastq, fmRead)
-    if stream == nil:
-        quit_error("Unable to open file: " & fastq, 2)
-    
     var
+        fastq: string
         sequence_id: string
         machine: string
         run: string
@@ -199,6 +189,24 @@ proc fq_meta*(fastq: string, sample_n = 20) =
         flowcell_description: string
         barcodes = newSeq[string](sample_n)
         i = 0
+
+    if follow_symlinks and symlinkExists(fastq_in):
+        fastq = expandSymlink(fastq_in)
+    else:
+        fastq = fastq_in
+
+    var basename = lastPathPart(fastq)
+    var absolute_path = absolutePath(fastq)
+
+
+    let stream: Stream =
+        if fastq[^3 .. ^1] == ".gz":
+            newGZFileStream(fastq)
+        else:
+            newFileStream(fastq, fmRead)
+    if stream == nil:
+        quit_error("Unable to open file: " & fastq, 2)
+
     
     while not stream.atEnd() and i < sample_n * 4:
         line = stream.readLine()
