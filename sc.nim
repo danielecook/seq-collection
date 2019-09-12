@@ -15,7 +15,7 @@ import terminal
 import asyncfile
 import zip/gzipfiles
 import src/fq_meta
-import src/index_swap
+#import src/index_swap
 import src/utils/helpers
 from constants import ANN_header
 
@@ -80,6 +80,8 @@ proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[strin
 
 proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool) =
     var v:VCF
+
+
 
     ## Format Fields
     let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
@@ -280,7 +282,7 @@ var p = newParser("sc"):
         option("-f", "--format", help="comma-delimited FORMAT fields; Use 'ALL' for everything", default="")
         option("-s", "--samples", help="Set Samples", default="ALL")
         flag("-p", "--pretty", help="Prettify result")
-        flag("-a", "--array", help="Output as a JSON array instead of ind. JSON lines")
+        flag("-a", "--array", help="Output as a JSON array instead of individual JSON lines")
         flag("-z", "--zip", help="Zip sample names with FORMAT fields (e.g. {'sample1': 25, 'sample2': 34})")
         flag("-n", "--annotation", help="Parse ANN Fields")
         flag("--debug", help="Debug")
@@ -297,23 +299,23 @@ var p = newParser("sc"):
         flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
         run:
             to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
-    command("index-swap", group="BAM"):
-        arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
-        option("-s", "--sites", help="List of sites to check (required)")
-        option("-f", "--fasta", help="Reference for use with CRAM files")
-        option("-t", "--threads", default="1", help="Threads")
-        run:
-            index_swaps(opts.BAM, opts.sites, opts.fasta, parseInt(opts.threads))
+    # command("index-swap", group="BAM"):
+    #     arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
+    #     option("-s", "--sites", help="List of sites to check (required)")
+    #     option("-f", "--fasta", help="Reference for use with CRAM files")
+    #     option("-t", "--threads", default="1", help="Threads")
+    #     run:
+    #         index_swaps(opts.BAM, opts.sites, opts.fasta, parseInt(opts.threads))
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if getFileInfo(stdin).id.file==37:
+if getFileInfo(stdin).id.device==0:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:
         input_params.add("STDIN")
 
-if commandLineParams().len <= 1:
+if input_params.len <= 1:
     input_params.add("-h")
     p.run(input_params)
 else:
@@ -328,5 +330,6 @@ else:
             stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
             raise
         else:
-            quit_error(E.msg)
+            if E.msg != "errno: 32 `Broken pipe`":
+                quit_error(E.msg)
 
