@@ -94,6 +94,7 @@ Options:
   -a, --array                Output as a JSON array instead of ind. JSON lines
   -z, --zip                  Zip sample names with FORMAT fields (e.g. {'sample1': 25, 'sample2': 34})
   -n, --annotation           Parse ANN Fields
+  --pass                     Only output variants where FILTER=PASS
   --debug                    Debug
   -h, --help                 Show this help
 ```
@@ -134,6 +135,11 @@ Outputs:
 }
 ```
 
+You can also specify custom `SGT` and `TGT` output formats which transform `GT` fields from their
+typical output.
+
+* `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
+* `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
 
 ## Compilation
 
