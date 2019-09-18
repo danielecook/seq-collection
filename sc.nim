@@ -14,8 +14,9 @@ import sequtils
 import terminal
 import asyncfile
 import zip/gzipfiles
-import src/fq
-import src/utils
+import src/fq_meta
+#import src/index_swap
+import src/utils/helpers
 from constants import ANN_header
 
 from posix import signal, SIG_PIPE, SIG_IGN
@@ -41,9 +42,15 @@ iterator variants*(vcf:VCF, regions: seq[string]): Variant =
         else:
             for v in vcf.query(region): yield v
 
-var fmt_zip = newJObject()
-var fmt_arr = newJArray()
-let null_json = newJNull()
+proc `%`(s: string): JsonNode =
+  # Overload JsonNode to string
+  # Important for converting
+  # '.' to null values
+  if s == ".":
+    result = newJNull()
+  else:
+    result = newJString(s)
+    
 
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
     # For fascilitating formatting FORMAT fields
@@ -51,21 +58,17 @@ proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[strin
         idx_start: int
         idx_end: int
         rec_out: JsonNode
+        fmt_zip = newJObject()
+        fmt_arr = newJArray()
     for idx in 0..<samples.len:
         if fmt_field.n_per_sample == 1:
-            if record[idx] < 0:
-                rec_out = %* null_json
-            else:
-                rec_out = %* record[idx]
+            rec_out = %* record[idx]
         else:
             idx_start = idx * fmt_field.n_per_sample
             idx_end = idx * fmt_field.n_per_sample + fmt_field.n_per_sample - 1
             var rec_arr = newJArray()
             for i in idx_start..idx_end:
-                if record[i] < 0:
-                    rec_arr.add(%* nil)
-                else:
-                    rec_arr.add(%* record[i])
+                rec_arr.add(%* record[i])
             rec_out = %* rec_arr
         if zip:
             fmt_zip.add(samples[idx], rec_out)
@@ -77,17 +80,36 @@ proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[strin
         return fmt_arr
 
 
-proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool) =
+proc to_tgt*(g:Genotype): string {.inline.} =
+  ## string representation of a genotype using allele val
+  result = join(map(g, proc(a:Allele): string = $a), "")
+  if result.len == 0:
+      return "."
+  if result[result.len - 1] in {'/', '|', '$'}:
+    result.set_len(result.len - 1)
+
+proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool, pass: bool) =
     var v:VCF
 
     ## Format Fields
     let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
     let format_keep = filterIt(format.split({',',' '}), it.len > 0)
-    
+    let output_all_format = ("ALL" in format_keep)
+
+    # Custom Format Fields
+    var sgt: FormatField
+    sgt.name = "SGT"
+    sgt.n_per_sample = 1
+    var tgt: FormatField
+    tgt.name = "TGT"
+    tgt.n_per_sample = 1
+
     ## Output fields
     var field_float = newSeq[float32](4)
     var field_int = newSeq[int32](4)
     var field_string = new_string_of_cap(4)
+
+
 
     doAssert open(v, vcf)
     if sample_set != "ALL":
@@ -98,6 +120,8 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
     if array:
         echo "["
     for rec in variants(v, region_list):
+        if pass and rec.FILTER != "PASS":
+            continue
         var info = rec.info
         var format = rec.format
         # Fetch INFO Fields
@@ -142,11 +166,11 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
                     elif info_field.vtype == BCF_TYPE.NULL:
                         j_info.add(info_field.name, %* true)
         
+
         ## Fetch FORMAT fields
         var j_format = newJObject()
-        let output_all_format = ("ALL" in format_keep)
         if output_all_format or format_keep.len >= 1:
-            for format_field in rec.format.fields:
+            for format_field in format.fields:
                 if output_all_format or format_field.name in format_keep:
                     if format_field.vtype == BCF_TYPE.FLOAT:
                         discard format.get(format_field.name, field_float)
@@ -154,8 +178,23 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
                     elif format_field.vtype in [BCF_TYPE.INT8, BCF_TYPE.INT16, BCF_TYPE.INT32]:
                         discard format.get(format_field.name, field_int)
                         j_format.add(format_field.name, out_fmt(field_int, format_field, zip, samples))
-            
-            
+            if "SGT" in format_keep:
+                j_format.add(sgt.name,
+                             out_fmt(format.genotypes(field_int).mapIt($it),
+                                     sgt,
+                                     zip,
+                                     samples))
+            if "TGT" in format_keep:
+                var alleles = @[rec.REF].concat(rec.ALT)
+                var tgt_set: seq[string]
+                for g in format.genotypes(field_int):
+                    var gt: string
+                    for a in g:
+                        gt = gt & (if a.value() >= 0: alleles[a.value()] else: ".") & (if a.phased: '|' else: '/')
+                    gt.set_len(gt.len - 1)
+                    tgt_set.add(gt)
+                j_format.add(tgt.name, out_fmt(tgt_set, tgt, zip, samples))
+                
         var jnode = newJObject()
         var variant = newJObject()
         var json_out = %* { "CHROM": $rec.CHROM,
@@ -261,15 +300,16 @@ var p = newParser("sc"):
         arg("fastq", nargs = -1, help="List of FASTQ files")
         option("-n", "--lines", help="Number of sequences to sample (n_lines) for qual and index/barcode determination", default = "100")
         flag("--header", help="Output just header")
+        flag("-s", "--symlinks", help="Follow symlinks")
         run:
             if opts.header:
                 # Allow user to output just the header if desired
-                echo fq.header
+                echo fq_meta.header
             elif opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq.fq_meta(fastq, parseInt(opts.lines))
+                    fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -278,13 +318,13 @@ var p = newParser("sc"):
         option("-f", "--format", help="comma-delimited FORMAT fields; Use 'ALL' for everything", default="")
         option("-s", "--samples", help="Set Samples", default="ALL")
         flag("-p", "--pretty", help="Prettify result")
-        flag("-a", "--array", help="Output as a JSON array instead of ind. JSON lines")
+        flag("-a", "--array", help="Output as a JSON array instead of individual JSON lines")
         flag("-z", "--zip", help="Zip sample names with FORMAT fields (e.g. {'sample1': 25, 'sample2': 34})")
         flag("-n", "--annotation", help="Parse ANN Fields")
+        flag("--pass", help="Only output variants where FILTER=PASS")
         flag("--debug", help="Debug")
         run:
-            to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array)
-            quit()
+            to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
     command("fasta", group="VCF"):
         help("Convert a VCF to a FASTA file")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -296,28 +336,31 @@ var p = newParser("sc"):
         flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
         run:
             to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
-    command("filter", group="BAM"):
-        run:
-            echo "G"
+    # command("index-swap", group="BAM"):
+    #     arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
+    #     option("-s", "--sites", help="List of sites to check (required)")
+    #     option("-f", "--fasta", help="Reference for use with CRAM files")
+    #     option("-t", "--threads", default="1", help="Threads")
+    #     run:
+    #         index_swaps(opts.BAM, opts.sites, opts.fasta, parseInt(opts.threads))
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
-    input_params[input_params.len-1] = "STDIN"
-elif terminal.isatty(stdin) == false:
+if getFileInfo(stdin).id.device==0:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:
         input_params.add("STDIN")
 
-if commandLineParams().len == 0:
-    stderr.write p.help()
-    quit()
+if input_params.len <= 1:
+    input_params.add("-h")
+    p.run(input_params)
 else:
     try:
         p.run(input_params)
     except UsageError as E:
         input_params.add("-h")
+        stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
         if input_params.find("--debug") > -1:
             p.run(input_params)
     except Exception as E:
@@ -325,5 +368,11 @@ else:
             stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
             raise
         else:
-            quit_error(E.msg)
+            if E.msg != "errno: 32 `Broken pipe`":
+                quit_error(E.msg)
 
+proc ctrlc() {.noconv.} =
+  echo "Ctrl+C fired!"
+  quit_error("G")
+
+setControlCHook(ctrlc)

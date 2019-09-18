@@ -1,12 +1,12 @@
 import sequtils
 import strutils
-import gz
+import utils/gz
 import os
 import re
 import sets
 import streams
 import zip/gzipfiles
-import utils
+import utils/helpers
 
 const qual = """!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
 const header* = ["machine",
@@ -151,12 +151,42 @@ proc detect_sequencer(machine: string, flowcell: string): (seq[string], string, 
     else:
         return (union(seq_by_iid, seq_by_fcid), "uncertain", "")
 
+
+proc extract_read_info*(line: string): (string, string, string, string, string) =
+    # Parses FASTQ read lines and send back output
+    var
+        qual_line = line.split({':', '/', '#'})
+        sequence_id: string
+        machine: string
+        run: string
+        lane: string
+        flowcell: string
+    
+    if qual_line.len == 1:
+        sequence_id = qual_line[0].strip(chars = {'@'})
+    elif qual_line.len > 1:
+        machine = qual_line[0].strip(chars = {'@'})
+        if '/' in line:
+            # @HWUSI-EAS100R:6:73:941:1973#ATGGGC/1
+            # machine:lane:tile:x:y#index/read
+            lane = qual_line[1]
+        else:
+            # @EAS139:136:FC706VJ:2:2104:15343:197393 1:Y:18:ATCACG 
+            # @EAS139:136:FC706VJ:2:2104:15343:197393 1:N:18:1
+            # @D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018 1:Y:0:GCTCGGTA
+            run = qual_line[1]
+            flowcell = qual_line[2]
+            if '_' in flowcell:
+                flowcell = flowcell.split("_")[^1]
+            lane = qual_line[3]
+    return (sequence_id, machine, run, lane, flowcell)
+
 proc get_sequencer_name(sequencers: seq[string]): string =
     const set1 = ["HiSeq2000", "HiSeq2500"]
     const set2 = ["HiSeq1500", "HiSeq2500"]
     const set3 = ["HiSeq3000", "HiSeq4000"]
-    const set4 = ["HiSeq1000", "HiSeq1500"]
-    const set5 = ["HiSeq1000", "HiSeq2000"]
+    #const set4 = ["HiSeq1000", "HiSeq1500"]
+    #const set5 = ["HiSeq1000", "HiSeq2000"]
     
     if (set1.anyIt(it in sequencers) == true):
         return "HiSeq2000/2500"
@@ -166,22 +196,11 @@ proc get_sequencer_name(sequencers: seq[string]): string =
         return "HiSeq3000/4000"
     elif sequencers.len > 0:
         return sequencers[^1]
-    
 
-proc fq_meta*(fastq: string, sample_n = 20) =
+proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
 
-    var basename = lastPathPart(fastq)
-    var absolute_path = absolutePath(fastq)
-
-    let stream: Stream =
-        if fastq[^3 .. ^1] == ".gz":
-            newGZFileStream(fastq)
-        else:
-            newFileStream(fastq, fmRead)
-    if stream == nil:
-        quit_error("Unable to open file: " & fastq, 2)
-    
     var
+        fastq: string
         sequence_id: string
         machine: string
         run: string
@@ -199,30 +218,32 @@ proc fq_meta*(fastq: string, sample_n = 20) =
         flowcell_description: string
         barcodes = newSeq[string](sample_n)
         i = 0
+
+    if follow_symlinks and symlinkExists(fastq_in):
+        fastq = expandSymlink(fastq_in)
+    else:
+        fastq = fastq_in
+
+    var basename = lastPathPart(fastq)
+    var absolute_path = absolutePath(fastq)
+
+
+    let stream: Stream =
+        if fastq[^3 .. ^1] == ".gz":
+            newGZFileStream(fastq)
+        else:
+            newFileStream(fastq, fmRead)
+    if stream == nil:
+        quit_error("Unable to open file: " & fastq, 2)
+
     
     while not stream.atEnd() and i < sample_n * 4:
         line = stream.readLine()
         if i %% 4 == 0:
             try:
-                var qual_line = line.split({':', '/', '#'})
                 if i == 0:
-                    if qual_line.len == 1:
-                        sequence_id = qual_line[0].strip(chars = {'@'})
-                    elif qual_line.len > 1:
-                        machine = qual_line[0].strip(chars = {'@'})
-                        if '/' in line:
-                            # @HWUSI-EAS100R:6:73:941:1973#ATGGGC/1
-                            # machine:lane:tile:x:y#index/read
-                            lane = qual_line[1]
-                        else:
-                            # @EAS139:136:FC706VJ:2:2104:15343:197393 1:Y:18:ATCACG 
-                            # @EAS139:136:FC706VJ:2:2104:15343:197393 1:N:18:1
-                            # @D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018 1:Y:0:GCTCGGTA
-                            run = qual_line[1]
-                            flowcell = qual_line[2]
-                            if '_' in flowcell:
-                                flowcell = flowcell.split("_")[^1]
-                            lane = qual_line[3]
+                    (sequence_id, machine, run, lane, flowcell) = extract_read_info(line)
+                var qual_line = line.split({':', '/', '#'})
                 if qual_line.len > 2:
                     if '/' in line:
                         barcode = qual_line[^2]
@@ -249,7 +270,7 @@ proc fq_meta*(fastq: string, sample_n = 20) =
     if barcode_set.len > 0:
         most_comm_barcode = barcode_set.newCountTable().largest()[0]
     var fastq_scores_name = fastq_scores.mapIt(it.name).join(";")
-    var fastq_scores_phred = fastq_scores.mapIt(it.phred).deduplicate().join(";")
+    let fastq_scores_phred = fastq_scores.mapIt(it.phred).deduplicate().join(";")
 
     echo [machine,
           sequencer,
