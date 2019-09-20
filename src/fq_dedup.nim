@@ -34,36 +34,34 @@ proc fq_dedup*(fastq: string) =
         quit_error("Unable to open file: " & fastq, 2)
     
     # Iterate once to place dups in.
-    while not stream.atEnd():
-        record = stream.readLine()
-        #record = stream.fq_string()
-        
-        if bloom.contains(record):
-            check.inc(record, 1)
-        bloom.incl(record)
-        discard stream.readLine()
-        discard stream.readLine()
-        discard stream.readLine()
+    for record in stream.lines:
+        if i mod 4 == 0:
+            if bloom.contains(record):
+                check.inc(record, 1)
+            bloom.incl(record)
         i.inc()
-        if i mod 1000 == 0:
-            stderr.writeLine($i)
+        if i mod 10000 == 0:
+            stderr.writeLine $i
 
     stream.setPosition(0)
-    while not stream.atEnd():
-        record = stream.readLine()
-        if record in check == false:
+    var write_ln = true
+    i = 0
+    for record in stream.lines:
+        i.inc()
+        if (i-1) mod 4 == 0:
+            if record in check == false:
+                echo record
+                write_ln = true
+                continue
+            else:
+                putative_false_positives.inc(record, 1)
+                if putative_false_positives[record] > 1:
+                    write_ln = false
+                    continue
+                echo record
+                write_ln = true
+        elif write_ln:
             echo record
-            echo stream.readLine()
-            echo stream.readLine()
-            echo stream.readLine()
-            continue
-        
-        putative_false_positives.inc(record, 1)
-        if putative_false_positives[record] > 1:
-            continue
-        echo record
-        echo stream.readLine()
-        echo stream.readLine()
-        echo stream.readLine()
+
 
     stream.close()

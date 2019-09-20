@@ -15,6 +15,7 @@ import terminal
 import asyncfile
 import zip/gzipfiles
 import src/fq_meta
+import src/fq_dedup
 #import src/index_swap
 import src/utils/helpers
 from constants import ANN_header
@@ -310,6 +311,11 @@ var p = newParser("sc"):
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
                     fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
+    command("fq-dedup", group="FASTQ"):
+        help("Removes exact duplicates from FASTQ Files")
+        arg("fastq", nargs = 1, help = "Input FASTQ")
+        run:
+            fq_dedup.fq_dedup(opts.fastq)
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
