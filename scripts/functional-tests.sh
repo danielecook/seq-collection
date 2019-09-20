@@ -3,8 +3,12 @@ test -e ssshtest || wget -q https://raw.githubusercontent.com/ryanlayer/ssshtest
 
 . ssshtest
 
-PARENT_DIR="`git rev-parse --show-toplevel`"
+PARENT_DIR=`git rev-parse --show-toplevel`
 export PATH="${PATH}:${PARENT_DIR}"
+
+#======#
+# json #
+#======#
 
 set -o nounset
 run test_json sc json "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
@@ -31,11 +35,30 @@ assert_equal 0.5 "$(cat $STDOUT_FILE | jq '.INFO.HOB')"
 run format_dp sc json --format="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" I:41947-41947 | jq '.FORMAT.DP|add'
 assert_equal 2094 "$(cat $STDOUT_FILE | jq '.FORMAT.DP|add')"
 
+#==========#
+# fq-dedup #
+#==========#
 
-# fq-meta
+run fq_dedup sc fq-dedup tests/fastq/dup.fq
+assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
+assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
+
+run fq_dedup_gz sc fq-dedup tests/fastq/dup.fq.gz
+assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
+assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
+
+#=========#
+# fq-meta #
+#=========#
 curl https://raw.githubusercontent.com/10XGenomics/supernova/master/tenkit/lib/python/tenkit/illumina_instrument.py | \
         grep -v 'import martian' | \
-        sed 's/martian.exit/exit/g' > illumina_instrument.py
+        sed 's/martian.exit/exit/g' | \
+        sed 's/f.readline()/f.readline().decode("utf-8")/g' | \
+        sed 's/exit/print/g' > "${PARENT_DIR}/illumina_instrument.py"
+
+# Fix python script
+echo "Fixing ${PARENT_DIR}/illumina_instrument.py"
+2to3 --write --nobackups "${PARENT_DIR}/illumina_instrument.py"
 
 function test_fq() {
     gzip -c $1 > test.fq.gz
