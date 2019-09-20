@@ -8,22 +8,28 @@ import sets
 import streams
 import zip/gzipfiles
 import utils/helpers
-import utils/bloom
+import bitvector
+import bloom
 
-
-proc fq_string(s: Stream): string =
-    var record = s.readLine()
-    return record & "\n" & s.readLine() & "\n" & s.readLine() & "\n" & s.readLine() 
+type
+    H = uint64
 
 proc fq_dedup*(fastq: string) =
+    #[
+        Deduplicates reads by ID in FASTQs
+
+        Based on Brent Pedersens implementation:
+        https://gist.github.com/brentp/640806
+    ]#
 
     var 
         i = 0
-        record: string
-        bloom: BloomFilter
-        false_positives: int
+        n_reads: int
+        n_dups: int
         check = initCountTable[string]()
         putative_false_positives = initCountTable[string]()
+
+    var bloom = newBloomFilter[uint32](1e8.int, 0.0001, 0, true)
 
     let stream: Stream =
         if fastq[^3 .. ^1] == ".gz":
@@ -36,12 +42,18 @@ proc fq_dedup*(fastq: string) =
     # Iterate once to place dups in.
     for record in stream.lines:
         if i mod 4 == 0:
-            if bloom.contains(record):
+            if bloom.lookup($record):
                 check.inc(record, 1)
-            bloom.incl(record)
+            bloom.insert($record)
         i.inc()
-        if i mod 10000 == 0:
+        if i mod 100000 == 0:
             stderr.writeLine $i
+
+    n_reads = i div 4.int
+
+    if check.len == 0:
+        stderr.writeLine("No Duplicates Found")
+        quit(0)
 
     stream.setPosition(0)
     var write_ln = true
@@ -57,11 +69,21 @@ proc fq_dedup*(fastq: string) =
                 putative_false_positives.inc(record, 1)
                 if putative_false_positives[record] > 1:
                     write_ln = false
+                    n_dups.inc(1)
                     continue
                 echo record
                 write_ln = true
         elif write_ln:
             echo record
+    
+    stderr.writeLine("total_reads: ", n_reads)
+    stderr.writeLine("duplicates ", n_dups)
+    var fp = 0
+    for v in putative_false_positives.values():
+        if v == 1:
+            fp.inc(1)
+    stderr.writeLine("false-positive: ", fp)
+    stderr.writeLine("false-positive-rate: ", fp.float / n_dups.float)
 
 
     stream.close()

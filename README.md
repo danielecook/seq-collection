@@ -20,7 +20,19 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
 
 ### fq-dedup
 
-De-duplicates a FASTQ by read ID. Ideally, this should never happen, but I've run into a few cases where FASTQs are like this.
+The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen, and I honestly do not know how it happens. The command has to read through the entire FASTQ twice. 
+
+The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates. If no duplicates are found during the first pass, the command will return 0 and print "No Duplicates Found" to `stderr`. If you are
+checking a set of FASTQs to remove duplicates, you can use the following bash to handle cases where duplicates are
+not found.
+
+```bash
+sc fq-dedup myfastq.fq.gz > myfastq.dedup.fq 2> result.err
+if [[ `head -n 1 result.err` == "No Duplicates Found" ]]; then
+    # Handle case where duplicates are not found (probably by moving file)
+    mv myfastq.fq.gz myfastq.dedup.fq
+fi
+```
 
 ### fq-meta
 
