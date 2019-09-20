@@ -4,6 +4,16 @@
 
 A collection of useful sequencing utilities.
 
+__FASTQ__
+* [#fq-dedup](fq-dedup)
+* [#fq-meta](fq-meta)
+
+__VCF__
+* [#json](json)
+* [#fasta](fasta)
+
+
+
 ## Usage
 
 Install using `nim c sc.nim`
