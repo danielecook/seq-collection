@@ -52,6 +52,15 @@ proc `%`(s: string): JsonNode =
   else:
     result = newJString(s)
     
+proc `%`(s: int): JsonNode =
+  # Overload JsonNode from int
+  # Important for converting
+  # '.' to null values
+  if s == int.low:
+    result = newJNull()
+  else:
+    result = newJInt(s)
+    
 
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
     # For fascilitating formatting FORMAT fields
@@ -81,14 +90,6 @@ proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[strin
         return fmt_arr
 
 
-proc to_tgt*(g:Genotype): string {.inline.} =
-  ## string representation of a genotype using allele val
-  result = join(map(g, proc(a:Allele): string = $a), "")
-  if result.len == 0:
-      return "."
-  if result[result.len - 1] in {'/', '|', '$'}:
-    result.set_len(result.len - 1)
-
 proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool, pass: bool) =
     var v:VCF
 
@@ -98,6 +99,9 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
     let output_all_format = ("ALL" in format_keep)
 
     # Custom Format Fields
+    var gt: FormatField
+    gt.name = "GT"
+    gt.n_per_sample = 1
     var sgt: FormatField
     sgt.name = "SGT"
     sgt.n_per_sample = 1
@@ -167,18 +171,26 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
                     elif info_field.vtype == BCF_TYPE.NULL:
                         j_info.add(info_field.name, %* true)
         
-
         ## Fetch FORMAT fields
         var j_format = newJObject()
         if output_all_format or format_keep.len >= 1:
             for format_field in format.fields:
-                if output_all_format or format_field.name in format_keep:
+                if output_all_format or format_field.name in format_keep and format_field.name != "GT":
                     if format_field.vtype == BCF_TYPE.FLOAT:
                         discard format.get(format_field.name, field_float)
                         j_format.add(format_field.name, out_fmt(field_float, format_field, zip, samples))
                     elif format_field.vtype in [BCF_TYPE.INT8, BCF_TYPE.INT16, BCF_TYPE.INT32]:
                         discard format.get(format_field.name, field_int)
                         j_format.add(format_field.name, out_fmt(field_int, format_field, zip, samples))
+            if "GT" in format_keep:
+                var i_gt: seq[int]
+                var gt_set: seq[seq[int]]
+                for g in format.genotypes(field_int):
+                    for a in g:
+                        i_gt.add (if a.value() >= 0: a.value() else: int.low)
+                    gt_set.add(i_gt)
+                    i_gt.setLen 0
+                j_format.add(gt.name, out_fmt(gt_set, gt, zip, samples))
             if "SGT" in format_keep:
                 j_format.add(sgt.name,
                              out_fmt(format.genotypes(field_int).mapIt($it),

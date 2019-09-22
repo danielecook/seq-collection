@@ -4,6 +4,16 @@
 
 A collection of useful sequencing utilities.
 
+__FASTQ__
+* [#fq-dedup](fq-dedup)
+* [#fq-meta](fq-meta)
+
+__VCF__
+* [#json](json)
+* [#fasta](fasta)
+
+
+
 ## Usage
 
 Install using `nim c sc.nim`
@@ -20,9 +30,9 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
 
 ### fq-dedup
 
-The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen, and I honestly do not know how it happens. The command has to read through the entire FASTQ twice. 
+The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen, and I honestly do not know how it happens.
 
-The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates. If no duplicates are found during the first pass, the command will return 0 and print "No Duplicates Found" to `stderr`. If you are
+The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates, and has to read through the file twice. If no duplicates are found during the first pass, the command will return 0 and print "No Duplicates Found" to `stderr`. If you are
 checking a set of FASTQs to remove duplicates, you can use the following bash to handle cases where duplicates are
 not found.
 
@@ -32,6 +42,30 @@ if [[ `head -n 1 result.err` == "No Duplicates Found" ]]; then
     # Handle case where duplicates are not found (probably by moving file)
     mv myfastq.fq.gz myfastq.dedup.fq
 fi
+```
+
+fq-dedup can read both `.gz` and raw text. It sends the deduplicated FASTQ to stdout.
+
+Be sure to use `-d:release` compiled binaries with this command otherwise its really slow.
+
+#### Output
+
+Once complete, the following is sent to stderr:
+
+```
+total_reads: 2500000
+duplicates 1086043
+false-positive: 0
+false-positive-rate: 0.0
+```
+
+The false-positive values are for diagnostics only based on reads initially labeled as duplicates by the bloom filter that were later found not to be.
+
+__Benchmark__
+
+```
+2.5M Reads; 1M+ duplicates; 2015 MacBook Pro
+0m58.738s
 ```
 
 ### fq-meta
@@ -154,6 +188,7 @@ Outputs:
 You can also specify custom `SGT` and `TGT` output formats which transform `GT` fields from their
 typical output.
 
+* `GT` - Outputs genotypes as [[0, 0], [0, 1], [1, 1], ...
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
 

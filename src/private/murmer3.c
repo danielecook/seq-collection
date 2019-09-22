@@ -1,1 +1,0 @@
-<html><body>You are being <a href="https://raw.githubusercontent.com/MarcAzar/BitVector/master/src/private/murmur3.c">redirected</a>.</body></html>

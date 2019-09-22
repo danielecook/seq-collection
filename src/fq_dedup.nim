@@ -46,8 +46,6 @@ proc fq_dedup*(fastq: string) =
                 check.inc(record, 1)
             bloom.insert($record)
         i.inc()
-        if i mod 100000 == 0:
-            stderr.writeLine $i
 
     n_reads = i div 4.int
 
