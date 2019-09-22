@@ -52,6 +52,15 @@ proc `%`(s: string): JsonNode =
   else:
     result = newJString(s)
     
+proc `%`(s: int): JsonNode =
+  # Overload JsonNode from int
+  # Important for converting
+  # '.' to null values
+  if s == int.low:
+    result = newJNull()
+  else:
+    result = newJInt(s)
+    
 
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
     # For fascilitating formatting FORMAT fields
@@ -178,7 +187,7 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
                 var gt_set: seq[seq[int]]
                 for g in format.genotypes(field_int):
                     for a in g:
-                        i_gt.add a.value()
+                        i_gt.add (if a.value() >= 0: a.value() else: int.low)
                     gt_set.add(i_gt)
                     i_gt.setLen 0
                 j_format.add(gt.name, out_fmt(gt_set, gt, zip, samples))
