@@ -9,24 +9,24 @@ import zip/gzipfiles
 import utils/helpers
 
 const qual = """!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
-const header* = ["machine",
-                 "sequencer",
-                 "prob_sequencer",
-                 "flowcell",
-                 "flowcell_description",
-                 "run",
-                 "lane",
-                 "sequence_id",
-                 "index1",
-                 "index2",
-                 "qual_format",
-                 "qual_phred",
-                 "qual_multiple",
-                 "min_qual",
-                 "max_qual",
-                 "n_lines",
-                 "basename",
-                 "absolute_path"].join("\t")
+const fq_meta_header* = ["machine",
+                         "sequencer",
+                         "prob_sequencer",
+                         "flowcell",
+                         "flowcell_description",
+                         "run",
+                         "lane",
+                         "sequence_id",
+                         "index1",
+                         "index2",
+                         "qual_format",
+                         "qual_phred",
+                         "qual_multiple",
+                         "min_qual",
+                         "max_qual",
+                         "n_lines",
+                         "basename",
+                         "absolute_path"].join("\t")
 
 import tables
 

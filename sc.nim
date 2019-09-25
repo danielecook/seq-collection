@@ -15,8 +15,8 @@ import terminal
 import asyncfile
 import zip/gzipfiles
 import src/fq_meta
-import src/fq_dedup
 import src/fq_count
+import src/fq_dedup
 #import src/index_swap
 import src/utils/helpers
 from constants import ANN_header
@@ -313,7 +313,7 @@ var p = newParser("sc"):
         run:
             if opts.header:
                 # Allow user to output just the header if desired
-                echo fq_meta.header
+                echo fq_meta_header
             elif opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
@@ -325,7 +325,7 @@ var p = newParser("sc"):
         arg("fastq", nargs = -1, help = "Input FASTQ")
         run:
             if opts.header:
-                echo fq_count.header
+                echo fq_count_header
             if opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
