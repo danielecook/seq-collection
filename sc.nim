@@ -16,6 +16,7 @@ import asyncfile
 import zip/gzipfiles
 import src/fq_meta
 import src/fq_dedup
+import src/fq_count
 #import src/index_swap
 import src/utils/helpers
 from constants import ANN_header
@@ -208,8 +209,6 @@ proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: st
                     tgt_set.add(gt)
                 j_format.add(tgt.name, out_fmt(tgt_set, tgt, zip, samples))
                 
-        var jnode = newJObject()
-        var variant = newJObject()
         var json_out = %* { "CHROM": $rec.CHROM,
                     "POS": rec.POS,
                     "ID": $rec.ID,
@@ -250,7 +249,6 @@ proc to_fasta(vcf: string, region_list: seq[string], sample_set: string, force: 
     var gts = new_seq[int32](10)
 
     var allele_set: seq[string]
-    var seq_add: cstring
     var sample: string
     # sample → chromosome_n → genotype
 
@@ -267,11 +265,9 @@ proc to_fasta(vcf: string, region_list: seq[string], sample_set: string, force: 
             chrom_set.add(newFileStream(fmt"{sample}_{n_chrom}.fa", fmWrite))
         sequences[n_sample] = chrom_set
 
-    var n_variant = 0
     var n_chrom = 0
     var n_sample = 0
     var allele_out: string
-    var gt_set: seq[string]
     for rec in variants(v, region_list):
         allele_set = sequtils.concat(@[rec.REF], rec.ALT)
         # Record ploidy
@@ -323,6 +319,18 @@ var p = newParser("sc"):
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
                     fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
+    command("fq-count", group="FASTQ"):
+        help("Counts lines in a FASTQ")
+        flag("--header", help="Output just header")
+        arg("fastq", nargs = -1, help = "Input FASTQ")
+        run:
+            if opts.header:
+                echo fq_count.header
+            if opts.fastq.len == 0:
+                quit_error("No FASTQ specified", 3)
+            if opts.fastq.len > 0:
+                for fastq in opts.fastq:
+                    fq_count.fq_count(fastq)
     command("fq-dedup", group="FASTQ"):
         help("Removes exact duplicates from FASTQ Files")
         arg("fastq", nargs = 1, help = "Input FASTQ")
