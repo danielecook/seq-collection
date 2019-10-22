@@ -5,12 +5,12 @@
 A collection of useful sequencing utilities.
 
 __FASTQ__
-* [#fq-dedup](fq-dedup)
-* [#fq-meta](fq-meta)
+* [fq-dedup](#fq-dedup)
+* [fq-meta](#fq-meta)
 
 __VCF__
-* [#json](json)
-* [#fasta](fasta)
+* [json](#json)
+* [fasta](#fasta)
 
 
 
