@@ -6,11 +6,13 @@ import strformat
 import strutils
 import os
 
-const header* = ["reads",
-                "gc_content",
-                "gc_bases",
-                "bases",
-                "fname"].join("\t")
+const fq_count_header* = ["reads",
+                          "gc_content",
+                          "gc_bases",
+                          "n_bases",
+                          "bases",
+                          "basename",
+                          "absolute_path"].join("\t")
 
 
 

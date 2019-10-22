@@ -14,10 +14,12 @@ import sequtils
 import terminal
 import asyncfile
 import zip/gzipfiles
+
 import src/fq_meta
 import src/fq_count
 import src/fq_dedup
-#import src/index_swap
+import src/vcf2tsv
+
 import src/utils/helpers
 from constants import ANN_header
 
@@ -336,6 +338,7 @@ var p = newParser("sc"):
         arg("fastq", nargs = 1, help = "Input FASTQ")
         run:
             fq_dedup.fq_dedup(opts.fastq)
+    
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -351,6 +354,17 @@ var p = newParser("sc"):
         flag("--debug", help="Debug")
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
+    
+    command("vcf2tsv", group="VCF"):
+        help("Converts a VCF to TSV or CSV")
+        flag("--header", help="Output the header")
+        arg("vcf", nargs = 1, help = "Input FASTQ")
+        run:
+            if opts.vcf.len == 0:
+                quit_error("No VCF specified", 3)
+            elif opts.vcf.len > 0:
+                vcf2tsv(opts.vcf)
+    
     command("fasta", group="VCF"):
         help("Convert a VCF to a FASTA file")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")

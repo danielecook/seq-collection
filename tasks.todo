@@ -33,4 +33,14 @@ Index Swap:
   ☐ Minimum coverage level (10 reads)
   ☐ Group by flowcell/lane
 
+BAM:
+    ☐ BAM list chromoomes
+    ☐ BAM window iterator
+    ☐ Tajima's D (Parallelize across chrom?)
+
+VCF:
+    ☐ VCF list chromosome
+    ☐ VCF window iterator
+    ☐ VCF Subsample?
+
 Genome manager (a better one?):
