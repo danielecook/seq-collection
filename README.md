@@ -5,12 +5,12 @@
 A collection of useful sequencing utilities.
 
 __FASTQ__
-* [#fq-dedup](fq-dedup)
-* [#fq-meta](fq-meta)
+* [fq-dedup](#fq-dedup)
+* [fq-meta](#fq-meta)
 
 __VCF__
-* [#json](json)
-* [#fasta](fasta)
+* [json](#json)
+* [fasta](#fasta)
 
 
 
@@ -37,10 +37,10 @@ checking a set of FASTQs to remove duplicates, you can use the following bash to
 not found.
 
 ```bash
-sc fq-dedup myfastq.fq.gz > myfastq.dedup.fq 2> result.err
-if [[ `head -n 1 result.err` == "No Duplicates Found" ]]; then
+(sc fq-dedup myfastq.fq.gz 2> dup.err) | gzip > out.fq.gz
+if [[ `head -n 1 dup.err` == "No Duplicates Found" ]]; then
     # Handle case where duplicates are not found (probably by moving file)
-    mv myfastq.fq.gz myfastq.dedup.fq
+    mv myout.fq.gz out.dedup.fq.gz
 fi
 ```
 

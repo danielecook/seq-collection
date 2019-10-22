@@ -52,7 +52,7 @@ proc fq_dedup*(fastq: string) =
 
     if check.len == 0:
         stderr.writeLine("No Duplicates Found")
-        quit(0)
+        stderr.writeLine("Copying fq to stdout")
 
     stream.setPosition(0)
     var write_ln = true
