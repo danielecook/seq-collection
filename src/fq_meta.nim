@@ -52,7 +52,7 @@ type
 let InstrumentIDs = @[Instrument(pattern: re"HWI-M[0-9]{4}$", sequencer: @["MiSeq"]),
                       Instrument(pattern: re"HWUSI", sequencer: @["GenomeAnalyzerIIx"]),
                       Instrument(pattern: re"M[0-9]{5}$", sequencer: @["MiSeq"]),
-                      Instrument(pattern: re"A[0-9]{6}$", sequencer: @["NovaSeq"]),
+                      Instrument(pattern: re"A[0-9]{5}$", sequencer: @["NovaSeq"]),
                       Instrument(pattern: re"HWI-C[0-9]{5}$", sequencer: @["HiSeq1500"]),
                       Instrument(pattern: re"C[0-9]{5}$", sequencer: @["HiSeq1500"]),
                       Instrument(pattern: re"HWI-D[0-9]{5}$", sequencer: @["HiSeq2500"]),
@@ -89,12 +89,12 @@ let FCIDs = @[Flowcell(pattern: re"AAXX$", sequencer: @["GenomeAnalyzer"], descr
               Flowcell(pattern: re"H[A-Z,0-9]{4}BGXY$", sequencer: @["NextSeq"], description: "High output flow cell"),
               Flowcell(pattern: re"H[A-Z,0-9]{4}BGX2$", sequencer: @["NextSeq"], description: "High output flow cell"),
               Flowcell(pattern: re"H[A-Z,0-9]{4}AFXX$", sequencer: @["NextSeq"], description: "Mid output flow cell"),
-              Flowcell(pattern: re"A[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
-              Flowcell(pattern: re"B[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
-              Flowcell(pattern: re"D[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq nano flow cell"),
-              Flowcell(pattern: re"G[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq micro flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}DMXX$", sequencer: @["NovaSeq"], description: "S2 flow cell")]
-
+              Flowcell(pattern: re"H[A-Z,0-9]{4}DMXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
+              Flowcell(pattern: re"H[A-Z,0-9]{4}DSXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
+              Flowcell(pattern: re"^A[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
+              Flowcell(pattern: re"^B[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
+              Flowcell(pattern: re"^D[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq nano flow cell"),
+              Flowcell(pattern: re"^G[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq micro flow cell")]
 
 proc qual_to_int(q_score: char): int =
     return qual.find(q_score)
