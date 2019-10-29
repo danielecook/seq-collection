@@ -1,4 +1,6 @@
 import os
+import hts
+import strutils
 import strformat
 import colorize
 
@@ -22,3 +24,19 @@ proc check_file_list*(files: seq[string]): bool =
         if check == false:
             missing_file = true
     return missing_file
+
+
+iterator variants*(vcf:VCF, regions: seq[string]): Variant =
+    ## iterator over region or just the variants.
+    if regions.len == 0:
+        for v in vcf: yield v
+    for region in regions:
+        if fileExists(region):
+            ## must be in bed format.
+            for l in region.lines:
+                if l[0] == '#' or l.strip().len == 0: continue
+                var toks = l.strip().split(seps={'\t'})
+                for v in vcf.query(&"{toks[0]}:{parseInt(toks[1]) + 1}-{toks[2]}"):
+                    yield v
+        else:
+            for v in vcf.query(region): yield v

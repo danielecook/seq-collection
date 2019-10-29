@@ -10,6 +10,8 @@ import zip/gzipfiles
 import utils/helpers
 import bitvector
 import bloom
+import hts
 
-proc vcf2tsv*(vcf_in: string) =
-    echo vcf_in
+proc vcf2tsv*(vcf: string) =
+    var v:VCF
+    doAssert open(v, vcf)

@@ -9,7 +9,7 @@ import zip/gzipfiles
 import utils/helpers
 
 const qual = """!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
-const fq_meta_header* = ["machine",
+const fq_meta_header = ["machine",
                          "sequencer",
                          "prob_sequencer",
                          "flowcell",
@@ -197,7 +197,7 @@ proc get_sequencer_name(sequencers: seq[string]): string =
     elif sequencers.len > 0:
         return sequencers[^1]
 
-proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
+proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool, fq_header: bool) =
 
     var
         fastq: string
@@ -218,6 +218,9 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
         flowcell_description: string
         barcodes = newSeq[string](sample_n)
         i = 0
+
+    if fq_header == true:
+        echo fq_meta_header
 
     if follow_symlinks and symlinkExists(fastq_in):
         fastq = expandSymlink(fastq_in)
