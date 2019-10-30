@@ -89,12 +89,14 @@ var p = newParser("sc"):
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")
         flag("--header", help="Output the header")
+        flag("--long", help="Output in long format instead of wide")
         arg("vcf", nargs = 1, help = "Input FASTQ")
+        arg("regions", nargs = -1, help = "Regions to subset on")
         run:
             if opts.vcf.len == 0:
                 quit_error("No VCF specified", 3)
             elif opts.vcf.len > 0:
-                vcf2tsv(opts.vcf)
+                vcf2tsv(opts.vcf, opts.long, opts.regions)
 
     command("window", group="VCF"):
         help("Generate windows from a VCF for parallel execution")

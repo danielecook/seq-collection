@@ -80,8 +80,6 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
     var field_int = newSeq[int32](4)
     var field_string = new_string_of_cap(4)
 
-
-
     doAssert open(v, vcf)
     if sample_set != "ALL":
         let samples_keep = filterIt(sample_set.split({',', ' '}), it.len > 0)

@@ -7,3 +7,5 @@ ssshtest
 .Rhistory
 .python-version
 bam_set/
+*.csi
+*.tbi
