@@ -27,6 +27,7 @@ import src/utils/helpers
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
+const VERSION = "0.0.1"
 
 proc get_vcf(vcf: string): string =
     if vcf == "STDIN":
@@ -38,7 +39,7 @@ import tables
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
-    help("Sequence data utilities")
+    help(fmt"Sequence data utilities (Version {VERSION})")
     command("fq-meta", group="FASTQ"):
         help("Output metadata for FASTQ")
         arg("fastq", nargs = -1, help="List of FASTQ files")
