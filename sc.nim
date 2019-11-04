@@ -17,6 +17,9 @@ import zip/gzipfiles
 import src/fq_meta
 import src/fq_count
 import src/fq_dedup
+
+import src/insert_size
+
 import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
@@ -86,6 +89,17 @@ var p = newParser("sc"):
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
     
+    command("insert-size", group="BAM"):
+        help("Calculate insert-size metrics")
+        flag("--header", help="Output just header")
+        arg("bam", nargs = -1, help = "Input BAM")
+        run:
+            if opts.bam.len == 0:
+                quit_error("No BAM specified", 3)
+            if opts.bam.len > 0:
+                for bam in opts.bam:
+                    insert_size.cmd_insert_size(bam)
+
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")
         flag("--header", help="Output the header")
