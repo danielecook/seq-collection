@@ -125,6 +125,34 @@ sc fq-meta --header > fastq_db.tsv # Prints just the header
 sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.gz >> fastq_db.tsv
 ```
 
+
+### insert-size
+
+Calculate the insert-size of a bam or a set of bams.
+
+```bash
+sc insert-size --header input.bam
+```
+
+__Options__
+
+* `--verbose` - Output information about progress.
+* `--dist--` - Output the frequency distribution of insert sizes.
+
+__Output__
+
+|   median |    mean |   min |   max_all |   n_reads |   n_accept |   n_use | sample         | filename       |
+|---------:|--------:|------:|----------:|----------:|-----------:|--------:|:---------------|:---------------|
+|      195 | 212.621 |     2 | 249229747 |   2062509 |    1021195 | 1016055 | sample_A    | sample_A.bam |
+
+
+Calculate insert-size metrics on a set of bams.
+
+```bash
+sc insert-size --header *.bam
+```
+
+
 ### json (VCF to JSON conversion)
 
 Convert a VCF to JSON. This is most useful in the context of a web-service, where you can serve variant data for the purposes of visualization, browsing, etc. For an example of what this might look like, see the [elegans variation variant browser](https://elegansvariation.org/data/browser/).
@@ -194,24 +222,3 @@ typical output.
 * `GT` - Outputs genotypes as [[0, 0], [0, 1], [1, 1], ...
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
-
-## insert-size
-
-Calculate insert size
-
-```bash
-sc insert-size --header input.bam
-```
-
-__Output__
-
-|   median |    mean |   min |   max_all |   n_reads |   n_accept |   n_use | sample         | filename       |
-|---------:|--------:|------:|----------:|----------:|-----------:|--------:|:---------------|:---------------|
-|      195 | 212.621 |     2 | 249229747 |   2062509 |    1021195 | 1016055 | sample_A    | sample_A.bam |
-
-
-## Compilation
-
-```
-nim c --cpu:i386 --os:linux --threads:on --compileOnly sc.nim
-```
