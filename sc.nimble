@@ -14,4 +14,4 @@ bin = @["sc"]
 skipDirs = @["test"]
 
 task test, "run tests":
-  exec "nim c --lineDir:on --debuginfo -r tests/all"
+  exec "nim c --threads:on -d:release --lineDir:on --debuginfo -r tests/all"
