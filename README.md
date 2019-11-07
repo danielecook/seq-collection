@@ -128,16 +128,17 @@ sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.
 
 ### insert-size
 
-Calculate the insert-size of a bam or a set of bams.
+Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard a lot faster. 
 
 ```bash
-sc insert-size --header input.bam
+sc insert-size --header input.bam # One bam
+sc insert-size --header *.bam # Multiple bams
 ```
 
 __Options__
 
-* `--verbose` - Output information about progress.
-* `--dist--` - Output the frequency distribution of insert sizes.
+* `--verbose` Output information about progress.
+* `--dist` Output the frequency distribution of insert sizes.
 
 __Output__
 
@@ -147,10 +148,6 @@ __Output__
 
 
 Calculate insert-size metrics on a set of bams.
-
-```bash
-sc insert-size --header *.bam
-```
 
 
 ### json (VCF to JSON conversion)
