@@ -13,7 +13,6 @@ __VCF__
 * [fasta](#fasta)
 
 
-
 ## Usage
 
 Install using `nim c sc.nim`
@@ -191,6 +190,21 @@ typical output.
 * `GT` - Outputs genotypes as [[0, 0], [0, 1], [1, 1], ...
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
+
+## insert-size
+
+Calculate insert size
+
+```bash
+sc insert-size --header input.bam
+```
+
+__Output__
+
+|   median |    mean |   max_all |   n_reads |   n_accept |   n_use |   filename |                    |
+|---------:|--------:|----------:|----------:|-----------:|--------:|-----------:|:-------------------|
+|      195 | 212.621 |         2 | 249229747 |    2062509 | 1021195 |    1016055 | input.bam |
+
 
 ## Compilation
 

@@ -47,7 +47,7 @@ var p = newParser("sc"):
         help("Output metadata for FASTQ")
         arg("fastq", nargs = -1, help="List of FASTQ files")
         option("-n", "--lines", help="Number of sequences to sample (n_lines) for qual and index/barcode determination", default = "100")
-        flag("--header", help="Output just header")
+        flag("--header", help="Output the header")
         flag("-s", "--symlinks", help="Follow symlinks")
         run:
             if opts.fastq.len == 0:
@@ -91,14 +91,17 @@ var p = newParser("sc"):
     
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
-        flag("--header", help="Output just header")
+        flag("--header", help="Output the header")
+        option("-d", "--dist", default="", help = "Output raw distribution(s)")
         arg("bam", nargs = -1, help = "Input BAM")
         run:
+            if opts.header:
+                echo insert_size.header
             if opts.bam.len == 0:
                 quit_error("No BAM specified", 3)
             if opts.bam.len > 0:
                 for bam in opts.bam:
-                    insert_size.cmd_insert_size(bam)
+                    insert_size.cmd_insert_size(bam, opts.dist)
 
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")

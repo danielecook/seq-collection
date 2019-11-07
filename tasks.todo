@@ -38,6 +38,7 @@ BAM:
     ☐ BAM window iterator
     ☐ InsertSizeMetrics (picard replacement)
     ☐ Tajima's D (Parallelize across chrom?)
+    ☐ Insert size calc → Parallelize across chromosome.
 
 VCF:
     ☐ VCF list chromosome
