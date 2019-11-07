@@ -117,11 +117,13 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
 run fq_meta_novaseq sc fq-meta tests/fastq/novaseq.fq
 assert_equal "$(cat $STDOUT_FILE | cut -f 2)" "NovaSeq"
 assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
-assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')"
 
 #=============#
 # Insert size #
 #=============#
 run insert_size sc insert-size tests/data/test.bam
 assert_equal "$(cat $STDOUT_FILE | cut -f 1 | tail -n 1)" "179"
-assert_equal "$(cat $STDOUT_FILE | cut -f 3 | tail -n 1)" "38"
+assert_equal "$(cat $STDOUT_FILE | cut -f 2 | tail -n 1)" "176.5"
+assert_equal "$(cat $STDOUT_FILE | cut -f 4 | tail -n 1)" "38"
+assert_equal "$(cat $STDOUT_FILE | cut -f 5 | tail -n 1)" "358"
+assert_equal "$(cat $STDOUT_FILE | cut -f 6 | tail -n 1)" "359"
