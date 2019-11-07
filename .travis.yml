@@ -12,7 +12,7 @@ install:
   - sudo apt-get install -y jq
 
 script: 
-  - nim c -d:release --cc:$CC sc.nim
+  - nim c --threads:on -d:release --cc:$CC sc.nim
   - bash ./scripts/functional-tests.sh
 branches:
   except:

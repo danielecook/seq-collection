@@ -10,6 +10,12 @@ import zip/gzipfiles
 import utils/helpers
 import bitvector
 import bloom
+import hts
 
-proc vcf2tsv*(vcf_in: string) =
-    echo vcf_in
+proc vcf2tsv*(vcf: string, long: bool, region_list: seq[string]) =
+    var v:VCF
+    doAssert open(v, vcf)
+    var samples = v.samples
+    for rec in variants(v, region_list):
+        echo rec
+        

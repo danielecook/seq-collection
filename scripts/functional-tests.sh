@@ -19,7 +19,7 @@ assert_equal 999 "$(cat "$STDOUT_FILE" | jq '.QUAL')"
 assert_equal \"T\" "$(cat "$STDOUT_FILE" | jq '.REF')"
 
 run test_json_pretty sc json --pretty "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
-assert_equal 13 "$(cat $STDOUT_FILE | wc -l)"
+assert_equal 13 $(cat $STDOUT_FILE | wc -l)
 
 # INFO
 run single_info_item sc json --info="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
@@ -40,12 +40,12 @@ assert_equal 2094 "$(cat $STDOUT_FILE | jq '.FORMAT.DP|add')"
 #==========#
 
 run fq_dedup sc fq-dedup tests/fastq/dup.fq
-assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
-assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
+assert_equal 4 $(cat $STDOUT_FILE | grep '@' | wc -l)
+assert_equal 4 $(cat $STDOUT_FILE | grep '@' | wc -l)
 
 run fq_dedup_gz sc fq-dedup tests/fastq/dup.fq.gz
-assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
-assert_equal 4 "$(cat $STDOUT_FILE | grep '@' | wc -l)"
+assert_equal 4 $(cat $STDOUT_FILE | grep '@' | wc -l)
+assert_equal 4 $(cat $STDOUT_FILE | grep '@' | wc -l)
 
 #=========#
 # fq-meta #
@@ -112,3 +112,18 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 2)" "HiSeqX"
 assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
 assert_equal "$(cat $STDOUT_FILE | cut -f 3 | cut -f 1 -d ':')" \
              "$(test_fq tests/fastq/illumina_hiseq_x.fq | egrep -o 'high')"
+
+# Novaseq
+run fq_meta_novaseq sc fq-meta tests/fastq/novaseq.fq
+assert_equal "$(cat $STDOUT_FILE | cut -f 2)" "NovaSeq"
+assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
+
+#=============#
+# Insert size #
+#=============#
+run insert_size sc insert-size tests/data/test.bam
+assert_equal "$(cat $STDOUT_FILE | cut -f 1 | tail -n 1)" "179"
+assert_equal "$(cat $STDOUT_FILE | cut -f 2 | tail -n 1)" "176.5"
+assert_equal "$(cat $STDOUT_FILE | cut -f 4 | tail -n 1)" "38"
+assert_equal "$(cat $STDOUT_FILE | cut -f 5 | tail -n 1)" "358"
+assert_equal "$(cat $STDOUT_FILE | cut -f 6 | tail -n 1)" "359"

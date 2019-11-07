@@ -24,9 +24,7 @@ const fq_meta_header* = ["machine",
                          "qual_multiple",
                          "min_qual",
                          "max_qual",
-                         "n_lines",
-                         "basename",
-                         "absolute_path"].join("\t")
+                         "n_lines"].join("\t")
 
 import tables
 
@@ -52,7 +50,7 @@ type
 let InstrumentIDs = @[Instrument(pattern: re"HWI-M[0-9]{4}$", sequencer: @["MiSeq"]),
                       Instrument(pattern: re"HWUSI", sequencer: @["GenomeAnalyzerIIx"]),
                       Instrument(pattern: re"M[0-9]{5}$", sequencer: @["MiSeq"]),
-                      Instrument(pattern: re"A[0-9]{6}$", sequencer: @["NovaSeq"]),
+                      Instrument(pattern: re"A[0-9]{5}$", sequencer: @["NovaSeq"]),
                       Instrument(pattern: re"HWI-C[0-9]{5}$", sequencer: @["HiSeq1500"]),
                       Instrument(pattern: re"C[0-9]{5}$", sequencer: @["HiSeq1500"]),
                       Instrument(pattern: re"HWI-D[0-9]{5}$", sequencer: @["HiSeq2500"]),
@@ -89,12 +87,12 @@ let FCIDs = @[Flowcell(pattern: re"AAXX$", sequencer: @["GenomeAnalyzer"], descr
               Flowcell(pattern: re"H[A-Z,0-9]{4}BGXY$", sequencer: @["NextSeq"], description: "High output flow cell"),
               Flowcell(pattern: re"H[A-Z,0-9]{4}BGX2$", sequencer: @["NextSeq"], description: "High output flow cell"),
               Flowcell(pattern: re"H[A-Z,0-9]{4}AFXX$", sequencer: @["NextSeq"], description: "Mid output flow cell"),
-              Flowcell(pattern: re"A[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
-              Flowcell(pattern: re"B[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
-              Flowcell(pattern: re"D[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq nano flow cell"),
-              Flowcell(pattern: re"G[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq micro flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}DMXX$", sequencer: @["NovaSeq"], description: "S2 flow cell")]
-
+              Flowcell(pattern: re"H[A-Z,0-9]{4}DMXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
+              Flowcell(pattern: re"H[A-Z,0-9]{4}DSXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
+              Flowcell(pattern: re"^A[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
+              Flowcell(pattern: re"^B[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
+              Flowcell(pattern: re"^D[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq nano flow cell"),
+              Flowcell(pattern: re"^G[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq micro flow cell")]
 
 proc qual_to_int(q_score: char): int =
     return qual.find(q_score)
@@ -197,10 +195,10 @@ proc get_sequencer_name(sequencers: seq[string]): string =
     elif sequencers.len > 0:
         return sequencers[^1]
 
-proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
+
+proc fq_meta*(fastq: string, sample_n = 20, basename: bool, absolute: bool) =
 
     var
-        fastq: string
         sequence_id: string
         machine: string
         run: string
@@ -219,23 +217,13 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
         barcodes = newSeq[string](sample_n)
         i = 0
 
-    if follow_symlinks and symlinkExists(fastq_in):
-        fastq = expandSymlink(fastq_in)
-    else:
-        fastq = fastq_in
-
-    var basename = lastPathPart(fastq)
-    var absolute_path = absolutePath(fastq)
-
-
     let stream: Stream =
-        if fastq[^3 .. ^1] == ".gz":
+        if fastq.toLowerAscii()[^3 .. ^1] == ".gz":
             newGZFileStream(fastq)
         else:
             newFileStream(fastq, fmRead)
     if stream == nil:
         quit_error("Unable to open file: " & fastq, 2)
-
     
     while not stream.atEnd() and i < sample_n * 4:
         line = stream.readLine()
@@ -272,7 +260,7 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
     var fastq_scores_name = fastq_scores.mapIt(it.name).join(";")
     let fastq_scores_phred = fastq_scores.mapIt(it.phred).deduplicate().join(";")
 
-    echo [machine,
+    let header_out = [machine,
           sequencer,
           sequencer_prob,
           flowcell,
@@ -287,6 +275,5 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool) =
           $(fastq_scores.mapIt(it.name).len > 1),
           (if qual_min >= 0: $qual_min else: ""),
           (if qual_max >= 0: $qual_max else: ""),
-          $(i/4).int,
-          basename,
-          absolute_path].join("\t")
+          $(i/4).int].join("\t")
+    output_w_fnames(header_out, fastq, basename, absolute)

@@ -7,332 +7,69 @@ import strformat
 import colorize
 import tables
 import hts
-import json
 import tables
 import strutils
 import sequtils
 import terminal
 import asyncfile
+import tables
 import zip/gzipfiles
 
 import src/fq_meta
 import src/fq_count
 import src/fq_dedup
+
+import src/insert_size
+
+import src/vcf2fasta
 import src/vcf2tsv
+import src/vcf2json
+import src/vcf_window
 
 import src/utils/helpers
-from constants import ANN_header
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
-proc get_vcf_it(vcf: VCF): iterator(): Variant =
-  return iterator(): Variant =
-    for i in vcf:
-      yield i
-
-iterator variants*(vcf:VCF, regions: seq[string]): Variant =
-    ## iterator over region or just the variants.
-    if regions.len == 0:
-        for v in vcf: yield v
-    for region in regions:
-        if fileExists(region):
-            ## must be in bed format.
-            for l in region.lines:
-                if l[0] == '#' or l.strip().len == 0: continue
-                var toks = l.strip().split(seps={'\t'})
-                for v in vcf.query(&"{toks[0]}:{parseInt(toks[1]) + 1}-{toks[2]}"):
-                    yield v
-        else:
-            for v in vcf.query(region): yield v
-
-proc `%`(s: string): JsonNode =
-  # Overload JsonNode to string
-  # Important for converting
-  # '.' to null values
-  if s == ".":
-    result = newJNull()
-  else:
-    result = newJString(s)
-    
-proc `%`(s: int): JsonNode =
-  # Overload JsonNode from int
-  # Important for converting
-  # '.' to null values
-  if s == int.low:
-    result = newJNull()
-  else:
-    result = newJInt(s)
-    
-
-proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
-    # For fascilitating formatting FORMAT fields
-    var 
-        idx_start: int
-        idx_end: int
-        rec_out: JsonNode
-        fmt_zip = newJObject()
-        fmt_arr = newJArray()
-    for idx in 0..<samples.len:
-        if fmt_field.n_per_sample == 1:
-            rec_out = %* record[idx]
-        else:
-            idx_start = idx * fmt_field.n_per_sample
-            idx_end = idx * fmt_field.n_per_sample + fmt_field.n_per_sample - 1
-            var rec_arr = newJArray()
-            for i in idx_start..idx_end:
-                rec_arr.add(%* record[i])
-            rec_out = %* rec_arr
-        if zip:
-            fmt_zip.add(samples[idx], rec_out)
-        else:
-            fmt_arr.add(rec_out)
-    if zip:
-        return fmt_zip
-    else:
-        return fmt_arr
-
-
-proc to_json(vcf: string, region_list: seq[string], sample_set: string, info: string, format: string, zip: bool, annotation: bool, pretty: bool, array: bool, pass: bool) =
-    var v:VCF
-
-    ## Format Fields
-    let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
-    let format_keep = filterIt(format.split({',',' '}), it.len > 0)
-    let output_all_format = ("ALL" in format_keep)
-
-    # Custom Format Fields
-    var gt: FormatField
-    gt.name = "GT"
-    gt.n_per_sample = 1
-    var sgt: FormatField
-    sgt.name = "SGT"
-    sgt.n_per_sample = 1
-    var tgt: FormatField
-    tgt.name = "TGT"
-    tgt.n_per_sample = 1
-
-    ## Output fields
-    var field_float = newSeq[float32](4)
-    var field_int = newSeq[int32](4)
-    var field_string = new_string_of_cap(4)
-
-
-
-    doAssert open(v, vcf)
-    if sample_set != "ALL":
-        let samples_keep = filterIt(sample_set.split({',', ' '}), it.len > 0)
-        set_samples(v, samples_keep)
-    var samples = v.samples
-
-    if array:
-        echo "["
-    for rec in variants(v, region_list):
-        if pass and rec.FILTER != "PASS":
-            continue
-        var info = rec.info
-        var format = rec.format
-        # Fetch INFO Fields
-        var j_info = newJObject()
-        let output_all_info = ("ALL" in info_keep or annotation)
-        if output_all_info or info_keep.len >= 1:
-            for info_field in rec.info.fields:
-                if annotation and info_field.name == "ANN":
-                    if info_field.name == "ANN":
-                        discard info.get(info_field.name, field_string)
-                        var ann_record_set = newJArray()
-                        for ANN in field_string.split(","):
-                            var ann_record = newJObject()
-                            var ann_split = ANN.split("|")
-                            for ann_col in 0..<ANN_header.len:
-                                ann_record.add(ANN_header[ann_col], newJString(ann_split[ann_col]))
-                            ann_record_set.add(ann_record)
-                        j_info.add("ANN", ann_record_set)
-                    elif info_field.name == "BCSQ":
-                        discard
-                elif output_all_info or info_field.name in info_keep:
-                    if info_field.n == 1:
-                        if info_field.vtype == BCF_TYPE.FLOAT:
-                            ## Single-field Float
-                            discard info.get(info_field.name, field_float)
-                            j_info.add(info_field.name, %* field_float[0])
-                        elif info_field.vtype in [BCF_TYPE.INT8, BCF_TYPE.INT16, BCF_TYPE.INT32]:
-                            ## Single-field Int
-                            discard info.get(info_field.name, field_int)
-                            j_info.add(info_field.name, %* field_int[0])
-                    elif info_field.vtype == BCF_TYPE.FLOAT:
-                        ## Multi-field Float
-                        discard info.get(info_field.name, field_float)
-                        j_info.add(info_field.name, %*field_float)
-                    elif info_field.vtype in [BCF_TYPE.INT8, BCF_TYPE.INT16, BCF_TYPE.INT32]:
-                        ## Multi-field Int
-                        discard info.get(info_field.name, field_int)
-                        j_info.add(info_field.name, %* field_int)
-                    elif info_field.vtype == BCF_TYPE.CHAR:
-                        discard info.get(info_field.name, field_string)
-                        j_info.add(info_field.name, %* field_string)
-                    elif info_field.vtype == BCF_TYPE.NULL:
-                        j_info.add(info_field.name, %* true)
-        
-        ## Fetch FORMAT fields
-        var j_format = newJObject()
-        if output_all_format or format_keep.len >= 1:
-            for format_field in format.fields:
-                if output_all_format or format_field.name in format_keep and format_field.name != "GT":
-                    if format_field.vtype == BCF_TYPE.FLOAT:
-                        discard format.get(format_field.name, field_float)
-                        j_format.add(format_field.name, out_fmt(field_float, format_field, zip, samples))
-                    elif format_field.vtype in [BCF_TYPE.INT8, BCF_TYPE.INT16, BCF_TYPE.INT32]:
-                        discard format.get(format_field.name, field_int)
-                        j_format.add(format_field.name, out_fmt(field_int, format_field, zip, samples))
-            if "GT" in format_keep:
-                var i_gt: seq[int]
-                var gt_set: seq[seq[int]]
-                for g in format.genotypes(field_int):
-                    for a in g:
-                        i_gt.add (if a.value() >= 0: a.value() else: int.low)
-                    gt_set.add(i_gt)
-                    i_gt.setLen 0
-                j_format.add(gt.name, out_fmt(gt_set, gt, zip, samples))
-            if "SGT" in format_keep:
-                j_format.add(sgt.name,
-                             out_fmt(format.genotypes(field_int).mapIt($it),
-                                     sgt,
-                                     zip,
-                                     samples))
-            if "TGT" in format_keep:
-                var alleles = @[rec.REF].concat(rec.ALT)
-                var tgt_set: seq[string]
-                for g in format.genotypes(field_int):
-                    var gt: string
-                    for a in g:
-                        gt = gt & (if a.value() >= 0: alleles[a.value()] else: ".") & (if a.phased: '|' else: '/')
-                    gt.set_len(gt.len - 1)
-                    tgt_set.add(gt)
-                j_format.add(tgt.name, out_fmt(tgt_set, tgt, zip, samples))
-                
-        var json_out = %* { "CHROM": $rec.CHROM,
-                    "POS": rec.POS,
-                    "ID": $rec.ID,
-                    "REF": rec.REF,
-                    "ALT": rec.ALT,
-                    "QUAL": rec.QUAL,
-                    "FILTER": rec.FILTER.split(";")}
-        if info_keep.len > 0:
-            json_out.add("INFO", j_info)
-        if format_keep.len > 0:
-            json_out.add("FORMAT", j_format)
-    
-        if pretty:
-            stdout.write $json_out.pretty()
-        else:
-            stdout.write $json_out
-        if array:
-            stdout.write ",\n"
-        else:
-            stdout.write "\n"
-    if array:
-        echo "]"
-
-proc `$`*(f:FileStream): string {.inline.} =
-    echo "<filestream>"
-
-proc to_fasta(vcf: string, region_list: seq[string], sample_set: string, force: bool) =
-    # vcf - VCF input
-    # region_list
-    # sample_set
-    # force - Force even if is not phased
-    var v:VCF
-    doAssert open(v, vcf)
-    if sample_set != "ALL":
-        let samples_keep = filterIt(sample_set.split({',', ' '}), it.len > 0)
-        set_samples(v, samples_keep)
-
-    var gts = new_seq[int32](10)
-
-    var allele_set: seq[string]
-    var sample: string
-    # sample → chromosome_n → genotype
-
-    var n_samples = v.samples.len
-    # Initialize streams
-    echo n_samples
-    var sequences = new_seq[seq[FileStream]](n_samples)
-    var chrom_set: seq[FileStream]
-    for n_sample in 0..<n_samples:
-        sample = v.samples[n_sample]
-        chrom_set = @[]
-        for n_chrom in 0..<2:
-            echo fmt"{n_sample} {n_chrom} - {v.samples[n_sample]}"
-            chrom_set.add(newFileStream(fmt"{sample}_{n_chrom}.fa", fmWrite))
-        sequences[n_sample] = chrom_set
-
-    var n_chrom = 0
-    var n_sample = 0
-    var allele_out: string
-    for rec in variants(v, region_list):
-        allele_set = sequtils.concat(@[rec.REF], rec.ALT)
-        # Record ploidy
-        n_sample = 0
-        for g in rec.format.genotypes(gts):
-            n_chrom = 0
-            for a in g:
-                if a.phased == false and force == false:
-                    quit_error("Genotypes are not phased", 99)
-                else:
-                    if a.value() != -1:
-                        allele_out = allele_set[a.value()]
-                    else:
-                        allele_out = "N"
-                    echo fmt"{allele_out} → {n_sample} → {n_chrom}"
-                    sequences[n_sample][n_chrom].write(allele_out)
-                n_chrom.inc()
-            n_sample.inc()
-
+const VERSION = "0.0.2"
 
 proc get_vcf(vcf: string): string =
     if vcf == "STDIN":
         return "-"
     return vcf
 
-# Convert a stream into an iterator of lines
-proc linesIterator(stream: Stream): iterator(): string =
-  result = iterator(): string =
-    while not stream.atEnd:
-      yield stream.readLine()
-
-import tables
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
-    help("Sequence data utilities")
+    help(fmt"Sequence data utilities (Version {VERSION})")
     command("fq-meta", group="FASTQ"):
         help("Output metadata for FASTQ")
         arg("fastq", nargs = -1, help="List of FASTQ files")
         option("-n", "--lines", help="Number of sequences to sample (n_lines) for qual and index/barcode determination", default = "100")
-        flag("--header", help="Output just header")
-        flag("-s", "--symlinks", help="Follow symlinks")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path") 
         run:
             if opts.header:
-                # Allow user to output just the header if desired
-                echo fq_meta_header
-            elif opts.fastq.len == 0:
-                quit_error("No FASTQ specified", 3)
+                output_header(fq_meta_header, opts.basename, opts.absolute)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.symlinks)
+                    fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.basename, opts.absolute)
     command("fq-count", group="FASTQ"):
         help("Counts lines in a FASTQ")
-        flag("--header", help="Output just header")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path") 
         arg("fastq", nargs = -1, help = "Input FASTQ")
         run:
             if opts.header:
-                echo fq_count_header
+                output_header(fq_meta_header, opts.basename, opts.absolute)
             if opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq_count.fq_count(fastq)
+                    fq_count.fq_count(fastq, opts.basename, opts.absolute)
+
     command("fq-dedup", group="FASTQ"):
         help("Removes exact duplicates from FASTQ Files")
         arg("fastq", nargs = 1, help = "Input FASTQ")
@@ -355,27 +92,54 @@ var p = newParser("sc"):
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
     
+    command("insert-size", group="BAM"):
+        help("Calculate insert-size metrics")
+        option("-d", "--dist", default="", help = "Output raw distribution(s)")
+        arg("bam", nargs = -1, help = "Input BAM")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path")        
+        flag("-v", "--verbose", help="Provide output")
+        run:
+            if opts.header:
+                output_header(insert_size_header, opts.basename, opts.absolute)
+            if opts.bam.len == 0:
+                quit_error("No BAM specified", 3)
+            if opts.bam.len > 0:
+                for bam in opts.bam:
+                    insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
+
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")
         flag("--header", help="Output the header")
+        flag("--long", help="Output in long format instead of wide")
         arg("vcf", nargs = 1, help = "Input FASTQ")
+        arg("regions", nargs = -1, help = "Regions to subset on")
         run:
             if opts.vcf.len == 0:
                 quit_error("No VCF specified", 3)
             elif opts.vcf.len > 0:
-                vcf2tsv(opts.vcf)
+                vcf2tsv(opts.vcf, opts.long, opts.regions)
+
+    # command("window", group="VCF"):
+    #     help("Generate windows from a VCF for parallel execution")
+    #     arg("vcf", nargs = 1, help = "Input VCF")
+    #     arg("width", nargs = 1)
+    #     run:
+    #         vcf_window(opts.vcf)
     
-    command("fasta", group="VCF"):
-        help("Convert a VCF to a FASTA file")
-        arg("vcf", nargs = 1, help="VCF to convert to JSON")
-        arg("region", nargs = -1, help="List of regions or bed files")
-        option("-s", "--samples", help="Set Samples", default="ALL")
-        option("-r", "--reference", help="Output full reference sequence")
-        flag("-f", "--force", help="Force output even if genotypes are not phased")
-        flag("-c", "--concat", help="Combine chromosomes into a single sequence")
-        flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
-        run:
-            to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
+    # command("fasta", group="VCF"):
+    #     help("Convert a VCF to a FASTA file")
+    #     arg("vcf", nargs = 1, help="VCF to convert to JSON")
+    #     arg("region", nargs = -1, help="List of regions or bed files")
+    #     option("-s", "--samples", help="Set Samples", default="ALL")
+    #     option("-r", "--reference", help="Output full reference sequence")
+    #     flag("-f", "--force", help="Force output even if genotypes are not phased")
+    #     flag("-c", "--concat", help="Combine chromosomes into a single sequence")
+    #     flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
+    #     run:
+    #         to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
+
     # command("index-swap", group="BAM"):
     #     arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
     #     option("-s", "--sites", help="List of sites to check (required)")

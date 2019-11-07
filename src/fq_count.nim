@@ -16,7 +16,7 @@ const fq_count_header* = ["reads",
 
 
 
-proc fq_count*(fastq: string) =
+proc fq_count*(fastq: string, basename: bool, absolute: bool) =
     #[
         Deduplicates reads by ID in FASTQs
 
@@ -31,9 +31,6 @@ proc fq_count*(fastq: string) =
         total_len: int64
         n_reads: int
         #n_dups: int
-
-    var basename = lastPathPart(fastq)
-    var absolute_path = absolutePath(fastq)
 
     let stream: Stream =
         if fastq[^3 .. ^1] == ".gz":
@@ -56,34 +53,6 @@ proc fq_count*(fastq: string) =
                 $(gc_cnt.float / (total_len - n_cnt).float),
                 $gc_cnt,
                 $n_cnt,
-                $total_len,
-                basename,
-                absolute_path]
+                $total_len]
 
-    echo output.join("\t")
-    
-    # https://github.com/nim-lang/Nim/issues/9026#issuecomment-423632254
-    # var mf = memfiles.open(fn)
-    # var cs: cstring
-    # var linec, wordc, bytec: int
-    # var inWord: bool
-    # var s: string
-    # for slice in memSlices(mf):
-    #   inc(linec)
-    #   cs = cast[cstring](slice.data)
-    #   let length = slice.size
-    #   inc(bytec, length)
-    #   var j = -1
-    #   for i in 0..length-1:
-    #     j = i
-    #     if cs[i] in WhiteSpace:
-    #       if inWord == true:
-    #         inc(wordc)
-    #         inWord = false
-    #     else:
-    #       inWord = true
-    #   if j >= 0:
-    #     inc(wordc)
-    # result.linec = linec
-    # result.wordc = wordc
-    # result.bytec = bytec + linec
+    output_w_fnames(output.join("\t"), fastq, basename, absolute)

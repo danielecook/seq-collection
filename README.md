@@ -8,10 +8,13 @@ __FASTQ__
 * [fq-dedup](#fq-dedup)
 * [fq-meta](#fq-meta)
 
+__BAM__
+
+* [insert-size](#insert-size)
+
 __VCF__
 * [json](#json)
 * [fasta](#fasta)
-
 
 
 ## Usage
@@ -68,6 +71,10 @@ __Benchmark__
 0m58.738s
 ```
 
+### fq-count
+
+Count the number of reads in a FASTQ
+
 ### fq-meta
 
 __Scenario:__ You are given an old dusty hard drive packed with sequence data. Your collaborator says "We have some great sequencing data here, if only someone could analyze it." You peek at the filesystem and discover that FASTQs have been renamed, removing crucial information about how they were generated. Your collaborator, however, recalls certain details about which data was sequenced on which sequencer and he has a list of sequencing barcodes and associated samples that you can match on." If only there was a way to determine the barcodes, sequencer, or other essential metadata for each FASTQ...
@@ -121,6 +128,31 @@ __Example output__``
 sc fq-meta --header > fastq_db.tsv # Prints just the header
 sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.gz >> fastq_db.tsv
 ```
+
+
+### insert-size
+
+Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard a lot faster. 
+
+```bash
+sc insert-size --header input.bam # One bam
+sc insert-size --header *.bam # Multiple bams
+```
+
+__Options__
+
+* `--verbose` Output information about progress.
+* `--dist` Output the frequency distribution of insert sizes.
+
+__Output__
+
+|   median |   mean |   std_dev |   min |   percentile_99.5 |   max_all |   n_reads |   n_accept |   n_use | sample   |
+|---------:|-------:|----------:|------:|------------------:|----------:|----------:|-----------:|--------:|:---------|
+|      179 |  176.5 |    63.954 |    38 |               358 |       359 |       237 |        101 |     100 | AB1      |
+
+
+Calculate insert-size metrics on a set of bams.
+
 
 ### json (VCF to JSON conversion)
 
@@ -192,7 +224,8 @@ typical output.
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
 
-## Compilation
+
+### Cross-compilation
 
 ```
 nim c --cpu:i386 --os:linux --threads:on --compileOnly sc.nim
