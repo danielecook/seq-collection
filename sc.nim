@@ -95,6 +95,7 @@ var p = newParser("sc"):
         option("-d", "--dist", default="", help = "Output raw distribution(s)")
         option("-j", "--threads", default="1", help = "Number of threads")
         arg("bam", nargs = -1, help = "Input BAM")
+        flag("-v", "--verbose", help="Provide output")
         run:
             if opts.header:
                 echo insert_size.header
@@ -102,7 +103,7 @@ var p = newParser("sc"):
                 quit_error("No BAM specified", 3)
             if opts.bam.len > 0:
                 for bam in opts.bam:
-                    insert_size.cmd_insert_size(bam, opts.dist, opts.threads.parseInt().int8)
+                    insert_size.cmd_insert_size(bam, opts.dist, opts.threads.parseInt(), opts.verbose)
 
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")

@@ -8,6 +8,10 @@ __FASTQ__
 * [fq-dedup](#fq-dedup)
 * [fq-meta](#fq-meta)
 
+__BAM__
+
+* [insert-size](#insert-size)
+
 __VCF__
 * [json](#json)
 * [fasta](#fasta)
@@ -201,9 +205,9 @@ sc insert-size --header input.bam
 
 __Output__
 
-|   median |    mean |   max_all |   n_reads |   n_accept |   n_use |   filename |                    |
-|---------:|--------:|----------:|----------:|-----------:|--------:|-----------:|:-------------------|
-|      195 | 212.621 |         2 | 249229747 |    2062509 | 1021195 |    1016055 | input.bam |
+|   median |    mean |   min |   max_all |   n_reads |   n_accept |   n_use | sample         | filename       |
+|---------:|--------:|------:|----------:|----------:|-----------:|--------:|:---------------|:---------------|
+|      195 | 212.621 |     2 | 249229747 |   2062509 |    1021195 | 1016055 | sample_A    | sample_A.bam |
 
 
 ## Compilation
