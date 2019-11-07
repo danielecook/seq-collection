@@ -12,6 +12,7 @@ import strutils
 import sequtils
 import terminal
 import asyncfile
+import tables
 import zip/gzipfiles
 
 import src/fq_meta
@@ -36,9 +37,6 @@ proc get_vcf(vcf: string): string =
     if vcf == "STDIN":
         return "-"
     return vcf
-
-
-import tables
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
@@ -93,7 +91,6 @@ var p = newParser("sc"):
         help("Calculate insert-size metrics")
         flag("--header", help="Output the header")
         option("-d", "--dist", default="", help = "Output raw distribution(s)")
-        option("-j", "--threads", default="1", help = "Number of threads")
         arg("bam", nargs = -1, help = "Input BAM")
         flag("-v", "--verbose", help="Provide output")
         run:
@@ -103,7 +100,7 @@ var p = newParser("sc"):
                 quit_error("No BAM specified", 3)
             if opts.bam.len > 0:
                 for bam in opts.bam:
-                    insert_size.cmd_insert_size(bam, opts.dist, opts.threads.parseInt(), opts.verbose)
+                    insert_size.cmd_insert_size(bam, opts.dist, opts.verbose)
 
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")

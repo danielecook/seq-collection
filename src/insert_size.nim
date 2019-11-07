@@ -69,9 +69,6 @@ type
     inserts, overflow: seq[int64]
     n_reads, n_accept: int
 
-proc `$`(s: chrom_freqs): string =
-  fmt"(inserts: ${s.inserts[0..5]})"
-
 proc freq_inserts(bamfile: string, contig: string, verbose: bool): chrom_freqs =
     var b: Bam
     var n_reads = 0
@@ -96,7 +93,7 @@ proc freq_inserts(bamfile: string, contig: string, verbose: bool): chrom_freqs =
                        n_reads: n_reads,
                        n_accept: n_accept)
 
-proc cmd_insert_size*(bamfile: string, distfile: string, threads: int, verbose: bool) =
+proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool) =
     #[
         Calculates insert size
     ]#
