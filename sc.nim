@@ -31,7 +31,7 @@ import src/utils/helpers
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
-const VERSION = "0.0.1"
+const VERSION = "0.0.2"
 
 proc get_vcf(vcf: string): string =
     if vcf == "STDIN":

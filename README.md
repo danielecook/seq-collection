@@ -146,9 +146,9 @@ __Options__
 
 __Output__
 
-|   median |   mean |   std_dev |   min |   percentile_99.5 |   max_all |   n_reads |   n_accept |   n_use | sample   | filename   |
-|---------:|-------:|----------:|------:|------------------:|----------:|----------:|-----------:|--------:|:---------|:-----------|
-|      179 |  176.5 |    63.954 |    38 |               358 |       359 |       237 |        101 |     100 | AB1      | test.bam   |
+|   median |   mean |   std_dev |   min |   percentile_99.5 |   max_all |   n_reads |   n_accept |   n_use | sample   |
+|---------:|-------:|----------:|------:|------------------:|----------:|----------:|-----------:|--------:|:---------|
+|      179 |  176.5 |    63.954 |    38 |               358 |       359 |       237 |        101 |     100 | AB1      |
 
 
 Calculate insert-size metrics on a set of bams.
