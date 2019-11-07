@@ -8,12 +8,17 @@ import stats
 import os
 import colorize
 import re
+import algorithm
 import threadpool
 #import ggplotnim
 
+const INS_ARR = 10000
+
 const header* = ["median",
                  "mean",
+                 "std_dev",
                  "min",
+                 "percentile_99.5",
                  "max_all",
                  "n_reads",
                  "n_accept",
@@ -71,8 +76,7 @@ proc freq_inserts(bamfile: string, contig: string, verbose: bool): chrom_freqs =
     var b: Bam
     var n_reads = 0
     var n_accept = 0
-    let ins_arr = 10000
-    var inserts = new_seq[int64](ins_arr)
+    var inserts = new_seq[int64](INS_ARR)
     var overflow: seq[int64]
     open(b, bamfile, index=true)
     for record in b.query(contig):
@@ -97,14 +101,15 @@ proc cmd_insert_size*(bamfile: string, distfile: string, threads: int, verbose: 
         Calculates insert size
     ]#
     let fname = bam_file.lastPathPart()
-    const ins_arr = 10000
     var 
         b: Bam
-        inserts = new_seq[int64](ins_arr)
-        inserts_trimmed = new_seq[int64](ins_arr)
+        inserts = new_seq[int64](INS_ARR)
+        inserts_trimmed = new_seq[int64](INS_ARR)
         overflow: seq[int64]
         n_reads = 0
         n_accept = 0
+        max_insert = 0i64
+        p99 = 0i64
     
     open(b, bamfile, index=true)
     var freq_results = newSeq[FlowVar[chrom_freqs]](b.hdr.targets().len)
@@ -136,11 +141,13 @@ proc cmd_insert_size*(bamfile: string, distfile: string, threads: int, verbose: 
         cumulative_sum.add(running_total)
         if running_total.float / total_length.float <= 0.995:
             inserts_trimmed[idx] = val
+            p99 = idx + 1
     
+
     #echo inserts_trimmed
     let median_insert_size = median_freq(inserts_trimmed)
     let mean_insert_size = mean_freq(inserts_trimmed)
-    let min_insert_size = inserts_trimmed.filterIt(it > 0)[0]
+    let min_insert_size = inserts_trimmed.find(inserts_trimmed.filterIt(it > 0)[0]) + 1
     
     # # Plotting
     # let x = toSeq(1..inserts_trimmed.len)
@@ -162,10 +169,27 @@ proc cmd_insert_size*(bamfile: string, distfile: string, threads: int, verbose: 
             f.writeLine([$idx, $val, bam_sample(b), fname].join("\t"))
         f.close()
 
+    # Calc max
+    if overflow.len > 0:
+        max_insert = max(overflow.mapIt(it.int))
+    else:
+        max_insert = inserts.len.int64 - inserts.reversed().find(inserts.filterIt(it > 0)[^1])
+    
+    # Calc sd
+    # Standard dev
+    let n = sum(inserts[1..p99 - 1])
+    var m = 0.int64
+    for idx, val in inserts[0..p99 - 1]:
+        m += val * (idx + 1)^2
+    let variance = (m.float - (n.float*(mean_insert_size^2))) / (n - 1).float
+    let std_dev = pow(variance, 0.5)
+
     var result = [$median_insert_size,
                   $math.round(mean_insert_size, 3),
+                  $round(std_dev, 3),
                   $min_insert_size,
-                  $max(overflow),
+                  $p99,
+                  $max_insert,
                   $n_reads,
                   $n_accept,
                   $(sum(inserts_trimmed)),
