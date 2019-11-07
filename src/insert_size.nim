@@ -2,6 +2,7 @@ import tables
 import hts
 import sequtils
 import strutils
+import strformat
 import math
 import stats
 import os
@@ -57,14 +58,39 @@ proc bam_sample(b: Bam): string =
                     return field.replace("SM:", "")
     return ""
 
-proc freq_inserts(bam_name: string, contig: string, contig_length: uint32): int =
+type
+  chrom_freqs = ref object
+    inserts, overflow: seq[int64]
+    n_reads, n_accept: int
+
+proc `$`(s: chrom_freqs): string =
+  fmt"(inserts: ${s.inserts[0..5]})"
+
+proc freq_inserts(bamfile: string, contig: string, contig_length: uint32): chrom_freqs =
     var b: Bam
-    var n = 0
-    open(b, bam_name, index=true)
-    for record in b.query(contig, start=1, stop=contig_length.int):
+    var n_reads = 0
+    var n_accept = 0
+    let ins_arr = 10000
+    var inserts = new_seq[int64](ins_arr)
+    var overflow: seq[int64]
+    open(b, bamfile, index=true)
+    for record in b.query(contig, start=0, stop=contig_length.int):
+        n_reads += 1
         if record.accept_record():
-            n += 1
-    return n
+            n_accept += 1
+            var insert_val = abs(record.isize)
+            if insert_val <= inserts.len:
+                inserts[insert_val-1] += 1
+            else:
+                overflow.add(insert_val)
+    echo fmt"FETCHING {contig}"
+    var result = chrom_freqs(inserts: inserts, 
+                       overflow: overflow,
+                       n_reads: n_reads,
+                       n_accept: n_accept)
+    echo result
+    return result
+    
 
 proc cmd_insert_size*(bamfile: string, distfile: string, threads: int8) =
     # [ ] TODO: Reimplement this with a count table?
@@ -84,30 +110,41 @@ proc cmd_insert_size*(bamfile: string, distfile: string, threads: int8) =
     var overflow: seq[int64]
     var n_reads = 0
     var n_accept = 0
-
+    
     # Option 1: 0m2.951s parallelization
-    open(b, bamfile, threads=threads, index=true)
-    # var freq_results = newSeq[FlowVar[int]](b.hdr.targets().len)
-    # for idx, contig in b.hdr.targets():
-    #     echo contig.name
-    #     freq_results[idx] = spawn freq_inserts(bamfile, contig.name, contig.length)
-    #     echo contig.name, " ", contig.length
-    # echo "G"
-    # sync()
-    # for idx, contig in b.hdr.targets():
-    #     echo ^freq_results[idx], " - ", contig
-    #     echo "---"
-
     # Can potentially parallelize here across contigs
-    for record in b:
-        n_reads += 1
-        if record.accept_record():
-            n_accept += 1
-            var insert_val = abs(record.isize)
-            if insert_val <= inserts.len:
-                inserts[insert_val-1] += 1
-            else:
-                overflow.add(insert_val)
+        # open(b, bamfile, threads=threads, index=true)
+        # for record in b:
+        #     n_reads += 1
+        #     if record.accept_record():
+        #         n_accept += 1
+        #         var insert_val = abs(record.isize)
+        #         if insert_val <= inserts.len:
+        #             inserts[insert_val-1] += 1
+        #         else:
+        #             overflow.add(insert_val)
+        
+        # echo inserts[0..50]
+    
+    # Option 2: parallelize across chromosomes
+    # Time: 1.980
+    open(b, bamfile, index=true)
+    var freq_results = newSeq[FlowVar[chrom_freqs]](b.hdr.targets().len)
+    for idx, contig in b.hdr.targets():
+        freq_results[idx] = spawn freq_inserts(bamfile, contig.name, contig.length)
+    sync()
+
+
+    for idx, contig in b.hdr.targets():
+        var result = ^freq_results[idx]
+        for i, v in result.inserts:
+            inserts[i] += v
+        for i, v in result.overflow:
+            overflow.add(v)
+        n_reads += result.n_reads
+        n_accept += result.n_accept
+    echo inserts[0..50]
+
 
     # Now calculate the median insert size
     # Add an option to include 'overflow length'
