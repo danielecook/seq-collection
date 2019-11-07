@@ -1,17 +1,17 @@
 General:
   ☐ Fetch test datasets 
 
-FQ-Meta
+FQ-Meta:
   ☐ Fetch information on SRR/SRA data from API?
+
+FQ-Dedup:
+  ☐ Modify behavior to always output regardless of dups.
 
 Tools:
   ☐ VCF2JSON
   ☐ Library identification through correlated coverage?
   ☐ VCF2TAB
   ☐ random
-
-FQMeta:
-  ☐ Handle SRA queries / Format
 
 https://www.ncbi.nlm.nih.gov/books/NBK25499/
 https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id=SRR015141&retmode=xml

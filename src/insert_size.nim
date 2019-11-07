@@ -6,6 +6,7 @@ import math
 import stats
 import os
 import re
+import threadpool
 #import ggplotnim
 
 const header* = ["median",
@@ -56,7 +57,16 @@ proc bam_sample(b: Bam): string =
                     return field.replace("SM:", "")
     return ""
 
-proc cmd_insert_size*(bamfile: string, distfile: string) =
+proc freq_inserts(bam_name: string, contig: string, contig_length: uint32): int =
+    var b: Bam
+    var n = 0
+    open(b, bam_name, index=true)
+    for record in b.query(contig, start=1, stop=contig_length.int):
+        if record.accept_record():
+            n += 1
+    return n
+
+proc cmd_insert_size*(bamfile: string, distfile: string, threads: int8) =
     # [ ] TODO: Reimplement this with a count table?
     #  create procs for MAD (median abs. dev)
     #  and use to calculate width...?
@@ -75,7 +85,18 @@ proc cmd_insert_size*(bamfile: string, distfile: string) =
     var n_reads = 0
     var n_accept = 0
 
-    open(b, bamfile, index=true)
+    # Option 1: 0m2.951s parallelization
+    open(b, bamfile, threads=threads, index=true)
+    # var freq_results = newSeq[FlowVar[int]](b.hdr.targets().len)
+    # for idx, contig in b.hdr.targets():
+    #     echo contig.name
+    #     freq_results[idx] = spawn freq_inserts(bamfile, contig.name, contig.length)
+    #     echo contig.name, " ", contig.length
+    # echo "G"
+    # sync()
+    # for idx, contig in b.hdr.targets():
+    #     echo ^freq_results[idx], " - ", contig
+    #     echo "---"
 
     # Can potentially parallelize here across contigs
     for record in b:
