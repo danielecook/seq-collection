@@ -38,6 +38,7 @@ proc get_vcf(vcf: string): string =
         return "-"
     return vcf
 
+
 var p = newParser("sc"):
     flag("--debug", help="Debug")
     help(fmt"Sequence data utilities (Version {VERSION})")
@@ -45,26 +46,30 @@ var p = newParser("sc"):
         help("Output metadata for FASTQ")
         arg("fastq", nargs = -1, help="List of FASTQ files")
         option("-n", "--lines", help="Number of sequences to sample (n_lines) for qual and index/barcode determination", default = "100")
-        flag("--header", help="Output the header")
-        flag("-s", "--symlinks", help="Follow symlinks")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path") 
         run:
-            if opts.fastq.len == 0:
-                quit_error("No FASTQ specified", 3)
+            if opts.header:
+                output_header(fq_meta_header, opts.basename, opts.absolute)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.symlinks, opts.header)
+                    fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.basename, opts.absolute)
     command("fq-count", group="FASTQ"):
         help("Counts lines in a FASTQ")
-        flag("--header", help="Output just header")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path") 
         arg("fastq", nargs = -1, help = "Input FASTQ")
         run:
             if opts.header:
-                echo fq_count_header
+                output_header(fq_meta_header, opts.basename, opts.absolute)
             if opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
-                    fq_count.fq_count(fastq)
+                    fq_count.fq_count(fastq, opts.basename, opts.absolute)
+
     command("fq-dedup", group="FASTQ"):
         help("Removes exact duplicates from FASTQ Files")
         arg("fastq", nargs = 1, help = "Input FASTQ")
@@ -89,18 +94,20 @@ var p = newParser("sc"):
     
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
-        flag("--header", help="Output the header")
         option("-d", "--dist", default="", help = "Output raw distribution(s)")
         arg("bam", nargs = -1, help = "Input BAM")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path")        
         flag("-v", "--verbose", help="Provide output")
         run:
             if opts.header:
-                echo insert_size.header
+                output_header(insert_size_header, opts.basename, opts.absolute)
             if opts.bam.len == 0:
                 quit_error("No BAM specified", 3)
             if opts.bam.len > 0:
                 for bam in opts.bam:
-                    insert_size.cmd_insert_size(bam, opts.dist, opts.verbose)
+                    insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
 
     command("vcf2tsv", group="VCF"):
         help("Converts a VCF to TSV or CSV")
@@ -114,24 +121,25 @@ var p = newParser("sc"):
             elif opts.vcf.len > 0:
                 vcf2tsv(opts.vcf, opts.long, opts.regions)
 
-    command("window", group="VCF"):
-        help("Generate windows from a VCF for parallel execution")
-        arg("vcf", nargs = 1, help = "Input VCF")
-        arg("width", nargs = 1)
-        run:
-            vcf_window(opts.vcf)
+    # command("window", group="VCF"):
+    #     help("Generate windows from a VCF for parallel execution")
+    #     arg("vcf", nargs = 1, help = "Input VCF")
+    #     arg("width", nargs = 1)
+    #     run:
+    #         vcf_window(opts.vcf)
     
-    command("fasta", group="VCF"):
-        help("Convert a VCF to a FASTA file")
-        arg("vcf", nargs = 1, help="VCF to convert to JSON")
-        arg("region", nargs = -1, help="List of regions or bed files")
-        option("-s", "--samples", help="Set Samples", default="ALL")
-        option("-r", "--reference", help="Output full reference sequence")
-        flag("-f", "--force", help="Force output even if genotypes are not phased")
-        flag("-c", "--concat", help="Combine chromosomes into a single sequence")
-        flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
-        run:
-            to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
+    # command("fasta", group="VCF"):
+    #     help("Convert a VCF to a FASTA file")
+    #     arg("vcf", nargs = 1, help="VCF to convert to JSON")
+    #     arg("region", nargs = -1, help="List of regions or bed files")
+    #     option("-s", "--samples", help="Set Samples", default="ALL")
+    #     option("-r", "--reference", help="Output full reference sequence")
+    #     flag("-f", "--force", help="Force output even if genotypes are not phased")
+    #     flag("-c", "--concat", help="Combine chromosomes into a single sequence")
+    #     flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
+    #     run:
+    #         to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
+
     # command("index-swap", group="BAM"):
     #     arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
     #     option("-s", "--sites", help="List of sites to check (required)")

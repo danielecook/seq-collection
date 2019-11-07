@@ -9,7 +9,7 @@ import zip/gzipfiles
 import utils/helpers
 
 const qual = """!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
-const fq_meta_header = ["machine",
+const fq_meta_header* = ["machine",
                          "sequencer",
                          "prob_sequencer",
                          "flowcell",
@@ -24,9 +24,7 @@ const fq_meta_header = ["machine",
                          "qual_multiple",
                          "min_qual",
                          "max_qual",
-                         "n_lines",
-                         "basename",
-                         "absolute_path"].join("\t")
+                         "n_lines"].join("\t")
 
 import tables
 
@@ -197,10 +195,10 @@ proc get_sequencer_name(sequencers: seq[string]): string =
     elif sequencers.len > 0:
         return sequencers[^1]
 
-proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool, fq_header: bool) =
+
+proc fq_meta*(fastq: string, sample_n = 20, basename: bool, absolute: bool) =
 
     var
-        fastq: string
         sequence_id: string
         machine: string
         run: string
@@ -219,26 +217,13 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool, fq_header:
         barcodes = newSeq[string](sample_n)
         i = 0
 
-    if fq_header == true:
-        echo fq_meta_header
-
-    if follow_symlinks and symlinkExists(fastq_in):
-        fastq = expandSymlink(fastq_in)
-    else:
-        fastq = fastq_in
-
-    var basename = lastPathPart(fastq)
-    var absolute_path = absolutePath(fastq)
-
-
     let stream: Stream =
-        if fastq[^3 .. ^1] == ".gz":
+        if fastq.toLowerAscii()[^3 .. ^1] == ".gz":
             newGZFileStream(fastq)
         else:
             newFileStream(fastq, fmRead)
     if stream == nil:
         quit_error("Unable to open file: " & fastq, 2)
-
     
     while not stream.atEnd() and i < sample_n * 4:
         line = stream.readLine()
@@ -275,7 +260,7 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool, fq_header:
     var fastq_scores_name = fastq_scores.mapIt(it.name).join(";")
     let fastq_scores_phred = fastq_scores.mapIt(it.phred).deduplicate().join(";")
 
-    echo [machine,
+    let header_out = [machine,
           sequencer,
           sequencer_prob,
           flowcell,
@@ -290,6 +275,5 @@ proc fq_meta*(fastq_in: string, sample_n = 20, follow_symlinks: bool, fq_header:
           $(fastq_scores.mapIt(it.name).len > 1),
           (if qual_min >= 0: $qual_min else: ""),
           (if qual_max >= 0: $qual_max else: ""),
-          $(i/4).int,
-          basename,
-          absolute_path].join("\t")
+          $(i/4).int].join("\t")
+    output_w_fnames(header_out, fastq, basename, absolute)

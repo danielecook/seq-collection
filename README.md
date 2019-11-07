@@ -71,6 +71,10 @@ __Benchmark__
 0m58.738s
 ```
 
+### fq-count
+
+Count the number of reads in a FASTQ
+
 ### fq-meta
 
 __Scenario:__ You are given an old dusty hard drive packed with sequence data. Your collaborator says "We have some great sequencing data here, if only someone could analyze it." You peek at the filesystem and discover that FASTQs have been renamed, removing crucial information about how they were generated. Your collaborator, however, recalls certain details about which data was sequenced on which sequencer and he has a list of sequencing barcodes and associated samples that you can match on." If only there was a way to determine the barcodes, sequencer, or other essential metadata for each FASTQ...
@@ -219,3 +223,10 @@ typical output.
 * `GT` - Outputs genotypes as [[0, 0], [0, 1], [1, 1], ...
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
+
+
+### Cross-compilation
+
+```
+nim c --cpu:i386 --os:linux --threads:on --compileOnly sc.nim
+```

@@ -10,11 +10,12 @@ import colorize
 import re
 import algorithm
 import threadpool
+import utils/helpers
 #import ggplotnim
 
 const INS_ARR = 10000
 
-const header* = ["median",
+const insert_size_header* = ["median",
                  "mean",
                  "std_dev",
                  "min",
@@ -23,8 +24,7 @@ const header* = ["median",
                  "n_reads",
                  "n_accept",
                  "n_use",
-                 "sample",
-                 "filename"].join("\t")
+                 "sample"].join("\t")
 
 const distribution_header = ["insert_size", "count", "sample", "filename"].join("\t")
 
@@ -93,7 +93,7 @@ proc freq_inserts(bamfile: string, contig: string, verbose: bool): chrom_freqs =
                        n_reads: n_reads,
                        n_accept: n_accept)
 
-proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool) =
+proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool, basename: bool, absolute: bool) =
     #[
         Calculates insert size
     ]#
@@ -181,7 +181,7 @@ proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool) =
     let variance = (m.float - (n.float*(mean_insert_size^2))) / (n - 1).float
     let std_dev = pow(variance, 0.5)
 
-    var result = [$median_insert_size,
+    var header_out = [$median_insert_size,
                   $math.round(mean_insert_size, 3),
                   $round(std_dev, 3),
                   $min_insert_size,
@@ -190,7 +190,6 @@ proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool) =
                   $n_reads,
                   $n_accept,
                   $(sum(inserts_trimmed)),
-                  bam_sample(b),
-                  fname]
-    echo result.join("\t")
+                  bam_sample(b)]
+    output_w_fnames(header_out.join("\t"), bamfile, basename, absolute)
 
