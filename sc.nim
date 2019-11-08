@@ -51,7 +51,7 @@ var p = newParser("sc"):
         flag("-a", "--absolute", help="Add column for absolute path") 
         run:
             if opts.header:
-                output_header(fq_meta_header, opts.basename, opts.absolute)
+                echo output_header(fq_meta_header, opts.basename, opts.absolute)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
                     fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.basename, opts.absolute)
@@ -63,7 +63,7 @@ var p = newParser("sc"):
         arg("fastq", nargs = -1, help = "Input FASTQ")
         run:
             if opts.header:
-                output_header(fq_meta_header, opts.basename, opts.absolute)
+                echo output_header(fq_meta_header, opts.basename, opts.absolute)
             if opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
@@ -102,7 +102,7 @@ var p = newParser("sc"):
         flag("-v", "--verbose", help="Provide output")
         run:
             if opts.header:
-                output_header(insert_size_header, opts.basename, opts.absolute)
+                echo output_header(insert_size_header, opts.basename, opts.absolute)
             if opts.bam.len == 0:
                 quit_error("No BAM specified", 3)
             if opts.bam.len > 0:

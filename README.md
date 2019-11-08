@@ -4,6 +4,36 @@
 
 A collection of useful sequencing utilities.
 
+
+```
+Sequence data utilities (Version 0.0.2)
+
+Usage:
+  sc [options] COMMAND
+
+Commands:
+
+  VCF:
+
+    json             Convert a VCF to JSON
+
+  FASTQ:
+
+    fq-meta          Output metadata for FASTQ
+    fq-count         Counts lines in a FASTQ
+    fq-dedup         Removes exact duplicates from FASTQ Files
+
+  BAM:
+
+    insert-size      Calculate insert-size metrics
+
+Options:
+  --debug                    Debug
+  -h, --help                 Show this help
+  ```
+
+# Command Documentation
+
 __FASTQ__
 * [fq-dedup](#fq-dedup)
 * [fq-meta](#fq-meta)
@@ -14,8 +44,6 @@ __BAM__
 
 __VCF__
 * [json](#json)
-* [fasta](#fasta)
-
 
 ## Usage
 
@@ -73,7 +101,7 @@ __Benchmark__
 
 ### fq-count
 
-Count the number of reads in a FASTQ
+Count the number of reads in a FASTQ and other metrics.
 
 ### fq-meta
 
@@ -132,7 +160,7 @@ sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.
 
 ### insert-size
 
-Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard a lot faster. 
+Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard but a lot faster. 
 
 ```bash
 sc insert-size --header input.bam # One bam

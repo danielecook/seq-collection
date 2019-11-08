@@ -276,4 +276,4 @@ proc fq_meta*(fastq: string, sample_n = 20, basename: bool, absolute: bool) =
           (if qual_min >= 0: $qual_min else: ""),
           (if qual_max >= 0: $qual_max else: ""),
           $(i/4).int].join("\t")
-    output_w_fnames(header_out, fastq, basename, absolute)
+    echo output_w_fnames(header_out, fastq, basename, absolute)

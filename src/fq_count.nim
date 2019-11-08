@@ -55,4 +55,4 @@ proc fq_count*(fastq: string, basename: bool, absolute: bool) =
                 $n_cnt,
                 $total_len]
 
-    output_w_fnames(output.join("\t"), fastq, basename, absolute)
+    echo output_w_fnames(output.join("\t"), fastq, basename, absolute)
