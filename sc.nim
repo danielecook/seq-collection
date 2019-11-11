@@ -7,12 +7,10 @@ import strformat
 import colorize
 import tables
 import hts
-import tables
 import strutils
 import sequtils
 import terminal
 import asyncfile
-import tables
 import zip/gzipfiles
 
 import src/fq_meta
@@ -99,7 +97,7 @@ var p = newParser("sc"):
         flag("-t", "--header", help="Output the header")
         flag("-b", "--basename", help="Add basename column")
         flag("-a", "--absolute", help="Add column for absolute path")        
-        flag("-v", "--verbose", help="Provide output")
+        flag("-v", "--verbose", help="Provide additional information")
         run:
             if opts.header:
                 echo output_header(insert_size_header, opts.basename, opts.absolute)
@@ -109,17 +107,22 @@ var p = newParser("sc"):
                 for bam in opts.bam:
                     insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
 
-    # command("vcf2tsv", group="VCF"):
-    #     help("Converts a VCF to TSV or CSV")
-    #     flag("--header", help="Output the header")
-    #     flag("--long", help="Output in long format instead of wide")
-    #     arg("vcf", nargs = 1, help = "Input FASTQ")
-    #     arg("regions", nargs = -1, help = "Regions to subset on")
-    #     run:
-    #         if opts.vcf.len == 0:
-    #             quit_error("No VCF specified", 3)
-    #         elif opts.vcf.len > 0:
-    #             vcf2tsv(opts.vcf, opts.long, opts.regions)
+    command("vcf2tsv", group="VCF"):
+        help("Convert a VCF to TSV")
+        arg("vcf", nargs = 1, help="VCF to convert to JSON")
+        arg("region", nargs = -1, help="List of regions")
+        option("-i", "--info", help="comma-delimited INFO fields", default="ALL")
+        option("-f", "--format", help="comma-delimited FORMAT fields", default="ALL")
+        option("-s", "--samples", help="Set Samples", default="ALL")
+        flag("-n", "--annotation", help="Parse ANN Fields")
+        flag("-l", "--long", help="Output in long format")
+        flag("--pass", help="Only output variants where FILTER=PASS")
+        flag("--debug", help="Debug")
+        run:
+            if opts.vcf.len == 0:
+                quit_error("No VCF specified", 3)
+            elif opts.vcf.len > 0:
+                vcf2tsv(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.long, opts.annotation, opts.pass)
 
     # command("window", group="VCF"):
     #     help("Generate windows from a VCF for parallel execution")
