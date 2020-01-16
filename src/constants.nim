@@ -15,3 +15,11 @@ const ANN_header* = ["allele",
                     "protein_position",
                     "distance_to_feature",
                     "error"]
+
+const BCSQ_header* = ["consequence",
+                     "gene",
+                     "transcript",
+                     "biotype",
+                     "strand",
+                    "amino_acid_change",
+                    "dna_change"]

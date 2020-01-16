@@ -4,7 +4,7 @@ import sequtils
 import strutils
 import utils/helpers
 import streams
-from constants import ANN_header
+from constants import ANN_header, BCSQ_header
 
 
 proc `%`(s: string): JsonNode =
@@ -99,18 +99,25 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
         if output_all_info or info_keep.len >= 1:
             for info_field in rec.info.fields:
                 if annotation and info_field.name == "ANN":
-                    if info_field.name == "ANN":
-                        discard info.get(info_field.name, field_string)
-                        var ann_record_set = newJArray()
-                        for ANN in field_string.split(","):
-                            var ann_record = newJObject()
-                            var ann_split = ANN.split("|")
-                            for ann_col in 0..<ANN_header.len:
-                                ann_record.add(ANN_header[ann_col], newJString(ann_split[ann_col]))
-                            ann_record_set.add(ann_record)
-                        j_info.add("ANN", ann_record_set)
-                    elif info_field.name == "BCSQ":
-                        discard
+                    discard info.get(info_field.name, field_string)
+                    var ann_record_set = newJArray()
+                    for ANN in field_string.split(","):
+                        var ann_record = newJObject()
+                        var ann_split = ANN.split("|")
+                        for ann_col in 0..<ANN_header.len:
+                            ann_record.add(ANN_header[ann_col], newJString(ann_split[ann_col]))
+                        ann_record_set.add(ann_record)
+                    j_info.add("ANN", ann_record_set)
+                elif annotation and info_field.name == "BCSQ":
+                    discard info.get(info_field.name, field_string)
+                    var ann_record_set = newJArray()
+                    for ANN in field_string.split(","):
+                        var ann_record = newJObject()
+                        var ann_split = ANN.split("|")
+                        for ann_col in 0..<ann_split.len:
+                            ann_record.add(BCSQ_header[ann_col], newJString(ann_split[ann_col]))
+                        ann_record_set.add(ann_record)
+                    j_info.add("ANN", ann_record_set)
                 elif output_all_info or info_field.name in info_keep:
                     if info_field.n == 1:
                         if info_field.vtype == BCF_TYPE.FLOAT:
