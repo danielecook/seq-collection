@@ -49,7 +49,7 @@ assert_equal "[null,null]" "$(cat $STDOUT_FILE | jq -c '.FORMAT.PL[0:2]')"
 
 #BCSQ
 run missing_float_to_null sc json -i BCSQ -n "${PARENT_DIR}/tests/data/test.bcsq.vcf.gz" chr22:40679539-40679539 
-assert_equal "MCHR1" "$(cat $STDOUT_FILE | jq -c '.INFO.BCSQ[0].gene')"
+assert_equal \"MCHR1\" "$(cat $STDOUT_FILE | jq -c '.INFO.BCSQ[0].gene')"
 
 #==========#
 # fq-dedup #

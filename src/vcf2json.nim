@@ -117,7 +117,7 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
                         for ann_col in 0..<ann_split.len:
                             ann_record.add(BCSQ_header[ann_col], newJString(ann_split[ann_col]))
                         ann_record_set.add(ann_record)
-                    j_info.add("ANN", ann_record_set)
+                    j_info.add("BCSQ", ann_record_set)
                 elif output_all_info or info_field.name in info_keep:
                     if info_field.n == 1:
                         if info_field.vtype == BCF_TYPE.FLOAT:
