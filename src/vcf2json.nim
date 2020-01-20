@@ -4,6 +4,7 @@ import sequtils
 import strutils
 import utils/helpers
 import streams
+import math
 from constants import ANN_header, BCSQ_header
 
 
@@ -20,10 +21,19 @@ proc `%`(s: int): JsonNode =
   # Overload JsonNode from int
   # Important for converting
   # '.' to null values
-  if s == int.low:
+  if s == int32.low:
     result = newJNull()
   else:
     result = newJInt(s)
+
+  proc `%`(s: float32): JsonNode =
+    # Overload JsonNode from float32
+    # Important for converting
+    # '.' to null values
+    if s.classify == fcNaN:
+      result = newJNull()
+    else:
+      result = newJFloat(s)      
     
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
     # For fascilitating formatting FORMAT fields
