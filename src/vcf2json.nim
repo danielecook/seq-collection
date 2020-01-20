@@ -71,8 +71,12 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
 
     ## Format Fields
     let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
-    let format_keep = filterIt(format.split({',',' '}), it.len > 0)
+    var format_keep = filterIt(format.split({',',' '}), it.len > 0)
     let output_all_format = ("ALL" in format_keep)
+
+    ## Set default genotype output with ALL
+    if output_all_format and format_keep.filterIt(it in @["GT", "SGT", "TGT"]).len == 0:
+      format_keep.add("GT")
 
     # Custom Format Fields
     var gt: FormatField
@@ -156,7 +160,7 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
         var j_format = newJObject()
         if output_all_format or format_keep.len >= 1:
             for format_field in format.fields:
-                if output_all_format or format_field.name in format_keep and format_field.name != "GT":
+                if (output_all_format or format_field.name in format_keep) and format_field.name != "GT":
                     if format_field.vtype == BCF_TYPE.FLOAT:
                         discard format.get(format_field.name, field_float)
                         j_format.add(format_field.name, out_fmt(field_float, format_field, zip, samples))
