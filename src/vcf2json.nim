@@ -21,12 +21,14 @@ proc `%`(s: int): JsonNode =
   # Overload JsonNode from int
   # Important for converting
   # '.' to null values
-  if s == int32.low:
+  ## When a format field has multiple values per sample, missing values are represeted by 
+  ## int32.low OR (int32.low +1). I can not understand this at all? 
+  if s == int32.low or s == (int32.low + 1):
     result = newJNull()
   else:
     result = newJInt(s)
 
-  proc `%`(s: float32): JsonNode =
+proc `%`(s: float32): JsonNode =
     # Overload JsonNode from float32
     # Important for converting
     # '.' to null values
