@@ -102,9 +102,16 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
 
     if array:
         echo "["
+    var first_record = true
     for rec in variants(v, region_list):
         if pass and rec.FILTER != "PASS":
             continue
+        # Print delimiters after all but the final record
+        if not first_record:
+          if array :
+              stdout.write ",\n"
+        else:
+          first_record = false    
         var info = rec.info
         var format = rec.format
         # Fetch INFO Fields
@@ -209,9 +216,7 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
             stdout.write $json_out.pretty()
         else:
             stdout.write $json_out
-        if array:
-            stdout.write ",\n"
-        else:
+        if not array:
             stdout.write "\n"
     if array:
-        echo "]"
+        echo "\n]"
