@@ -4,7 +4,8 @@ import sequtils
 import strutils
 import utils/helpers
 import streams
-from constants import ANN_header
+import math
+from constants import ANN_header, BCSQ_header
 
 
 proc `%`(s: string): JsonNode =
@@ -20,10 +21,21 @@ proc `%`(s: int): JsonNode =
   # Overload JsonNode from int
   # Important for converting
   # '.' to null values
-  if s == int.low:
+  ## When a format field has multiple values per sample, missing values are represeted by 
+  ## int32.low OR (int32.low +1). I can not understand this at all? 
+  if s == int32.low or s == (int32.low + 1):
     result = newJNull()
   else:
     result = newJInt(s)
+
+proc `%`(s: float32): JsonNode =
+    # Overload JsonNode from float32
+    # Important for converting
+    # '.' to null values
+    if s.classify == fcNaN:
+      result = newJNull()
+    else:
+      result = newJFloat(s)      
     
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
     # For fascilitating formatting FORMAT fields
@@ -61,8 +73,12 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
 
     ## Format Fields
     let info_keep = filterIt(info.split({',', ' '}), it.len > 0)
-    let format_keep = filterIt(format.split({',',' '}), it.len > 0)
+    var format_keep = filterIt(format.split({',',' '}), it.len > 0)
     let output_all_format = ("ALL" in format_keep)
+
+    ## Set default genotype output with ALL
+    if output_all_format and format_keep.filterIt(it in @["GT", "SGT", "TGT"]).len == 0:
+      format_keep.add("GT")
 
     # Custom Format Fields
     var gt: FormatField
@@ -88,9 +104,16 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
 
     if array:
         echo "["
+    var first_record = true
     for rec in variants(v, region_list):
         if pass and rec.FILTER != "PASS":
             continue
+        # Print delimiters after all but the final record
+        if not first_record:
+          if array :
+              stdout.write ",\n"
+        else:
+          first_record = false    
         var info = rec.info
         var format = rec.format
         # Fetch INFO Fields
@@ -99,18 +122,25 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
         if output_all_info or info_keep.len >= 1:
             for info_field in rec.info.fields:
                 if annotation and info_field.name == "ANN":
-                    if info_field.name == "ANN":
-                        discard info.get(info_field.name, field_string)
-                        var ann_record_set = newJArray()
-                        for ANN in field_string.split(","):
-                            var ann_record = newJObject()
-                            var ann_split = ANN.split("|")
-                            for ann_col in 0..<ANN_header.len:
-                                ann_record.add(ANN_header[ann_col], newJString(ann_split[ann_col]))
-                            ann_record_set.add(ann_record)
-                        j_info.add("ANN", ann_record_set)
-                    elif info_field.name == "BCSQ":
-                        discard
+                    discard info.get(info_field.name, field_string)
+                    var ann_record_set = newJArray()
+                    for ANN in field_string.split(","):
+                        var ann_record = newJObject()
+                        var ann_split = ANN.split("|")
+                        for ann_col in 0..<ANN_header.len:
+                            ann_record.add(ANN_header[ann_col], newJString(ann_split[ann_col]))
+                        ann_record_set.add(ann_record)
+                    j_info.add("ANN", ann_record_set)
+                elif annotation and info_field.name == "BCSQ":
+                    discard info.get(info_field.name, field_string)
+                    var ann_record_set = newJArray()
+                    for ANN in field_string.split(","):
+                        var ann_record = newJObject()
+                        var ann_split = ANN.split("|")
+                        for ann_col in 0..<ann_split.len:
+                            ann_record.add(BCSQ_header[ann_col], newJString(ann_split[ann_col]))
+                        ann_record_set.add(ann_record)
+                    j_info.add("BCSQ", ann_record_set)
                 elif output_all_info or info_field.name in info_keep:
                     if info_field.n == 1:
                         if info_field.vtype == BCF_TYPE.FLOAT:
@@ -139,7 +169,7 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
         var j_format = newJObject()
         if output_all_format or format_keep.len >= 1:
             for format_field in format.fields:
-                if output_all_format or format_field.name in format_keep and format_field.name != "GT":
+                if (output_all_format or format_field.name in format_keep) and format_field.name != "GT":
                     if format_field.vtype == BCF_TYPE.FLOAT:
                         discard format.get(format_field.name, field_float)
                         j_format.add(format_field.name, out_fmt(field_float, format_field, zip, samples))
@@ -188,9 +218,7 @@ proc to_json*(vcf: string, region_list: seq[string], sample_set: string, info: s
             stdout.write $json_out.pretty()
         else:
             stdout.write $json_out
-        if array:
-            stdout.write ",\n"
-        else:
+        if not array:
             stdout.write "\n"
     if array:
-        echo "]"
+        echo "\n]"
