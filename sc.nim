@@ -17,7 +17,7 @@ import src/fq_meta
 import src/fq_count
 import src/fq_dedup
 
-#import src/insert_size
+import src/insert_size
 
 import src/vcf2fasta
 import src/vcf2tsv
@@ -90,22 +90,22 @@ var p = newParser("sc"):
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
     
-#    command("insert-size", group="BAM"):
-#        help("Calculate insert-size metrics")
-#        option("-d", "--dist", default="", help = "Output raw distribution(s)")
-#        arg("bam", nargs = -1, help = "Input BAM")
-#        flag("-t", "--header", help="Output the header")
-#        flag("-b", "--basename", help="Add basename column")
-#        flag("-a", "--absolute", help="Add column for absolute path")        
-#        flag("-v", "--verbose", help="Provide additional information")
-#        run:
-#            if opts.header:
-#                echo output_header(insert_size_header, opts.basename, opts.absolute)
-#            if opts.bam.len == 0:
-#                quit_error("No BAM specified", 3)
-#            if opts.bam.len > 0:
-#                for bam in opts.bam:
-#                    insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
+    command("insert-size", group="BAM"):
+       help("Calculate insert-size metrics")
+       option("-d", "--dist", default="", help = "Output raw distribution(s)")
+       arg("bam", nargs = -1, help = "Input BAM")
+       flag("-t", "--header", help="Output the header")
+       flag("-b", "--basename", help="Add basename column")
+       flag("-a", "--absolute", help="Add column for absolute path")        
+       flag("-v", "--verbose", help="Provide additional information")
+       run:
+           if opts.header:
+               echo output_header(insert_size_header, opts.basename, opts.absolute)
+           if opts.bam.len == 0:
+               quit_error("No BAM specified", 3)
+           if opts.bam.len > 0:
+               for bam in opts.bam:
+                   insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
 
     command("vcf2tsv", group="VCF"):
         help("Convert a VCF to TSV")
