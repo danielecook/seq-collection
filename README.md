@@ -253,7 +253,7 @@ typical output.
 
 ### iter
 
-The `iter` command is used to generate genomic ranges that can be used to process genomic data in chunks. It works well with tools such as `xargs` or [gnu-parallel](https://www.gnu.org/software/parallel/).
+The `iter` command operates on BAM/CRAM and VCF/BCF files, and is used to generate genomic ranges that can be used to process genomic data in chunks. It works well with tools such as `xargs` or [gnu-parallel](https://www.gnu.org/software/parallel/).
 
 __Example__
 
