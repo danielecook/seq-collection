@@ -154,6 +154,10 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 6 | tail -n 1)" "359"
 # iter #
 #======#
 
+run vcf_iter sc iter tests/data/test.vcf 1000000
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:1-1000000"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:1-13794"
+
 run bam_iter sc iter tests/data/test.bam 1000000
 assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:0-999999"
-assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "V:20000000-20924180"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:0-13793"
