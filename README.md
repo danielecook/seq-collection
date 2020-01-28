@@ -287,6 +287,7 @@ parallel --verbose process_chunk ::: test.bam ::: $(sc iter test.bam)
 
 ```
 
+You can also set the `[width]` option to 0 to generate a list of chromosomes.
 
 
 
