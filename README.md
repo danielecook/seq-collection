@@ -268,7 +268,7 @@ sc iter test.bam 100,000 # Iterate on bins of 100k base pairs
 > I:4000000-4999999
 ```
 
-These genomic ranges can be fed into tools such as variant callers.
+This list of genomic ranges can be used to process a BAM or VCF in parallel:
 
 ```bash
 
@@ -283,7 +283,7 @@ function process_chunk {
 # Export the function to make it available to GNU parallel
 export -f process_chunk
 
-parallel --verbose process_chunk ::: test.bam ::: $(sc iter tests/data/test.bam)
+parallel --verbose process_chunk ::: test.bam ::: $(sc iter test.bam)
 
 ```
 
