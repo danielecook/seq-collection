@@ -149,3 +149,11 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 2 | tail -n 1)" "176.5"
 assert_equal "$(cat $STDOUT_FILE | cut -f 4 | tail -n 1)" "38"
 assert_equal "$(cat $STDOUT_FILE | cut -f 5 | tail -n 1)" "358"
 assert_equal "$(cat $STDOUT_FILE | cut -f 6 | tail -n 1)" "359"
+
+#======#
+# iter #
+#======#
+
+run bam_iter sc iter tests/data/test.bam 1000000
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:0-999999"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "V:20000000-20924180"

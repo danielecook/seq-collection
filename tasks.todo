@@ -35,8 +35,7 @@ Index Swap:
 
 BAM:
     ☐ BAM list chromoomes
-    ☐ BAM window iterator
-    ☐ InsertSizeMetrics (picard replacement)
+    ✔ BAM window iterator @done(20-01-28 06:48)
     ✔ Insert size calc → Parallelize across chromosome. @done(20-01-28 06:07)
 
 VCF:
@@ -44,5 +43,6 @@ VCF:
     ☐ VCF window iterator
     ☐ VCF Subsample?
     ☐ Tajima's D (Parallelize across chrom?)
+
 
 Genome manager (a better one?):

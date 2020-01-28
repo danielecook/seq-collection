@@ -12,6 +12,7 @@ import sequtils
 import terminal
 import asyncfile
 import zip/gzipfiles
+import hts
 
 import src/fq_meta
 import src/fq_count
@@ -143,7 +144,17 @@ var p = newParser("sc"):
         arg("input", nargs = 1, help = "Input VCF or BAM")
         arg("width", default="10000", nargs = 1, help = "bp length")
         run:
-            genome_iter(opts.input)
+            var width = opts.width.parseInt()
+            if width <= 0:
+                quit_error("Width must be greater than 0")
+            if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
+                var v:VCF
+                doAssert open(v, opts.input)
+                genome_iter(v, width)
+            else:
+                var b:BAM
+                doAssert open(b, opts.input)
+                genome_iter(b, width)
     
 
 # Check if input is from pipe

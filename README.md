@@ -16,12 +16,17 @@ Commands:
   VCF:
 
     json             Convert a VCF to JSON
+    tsv              Convert a VCF to TSV
 
   FASTQ:
 
     fq-meta          Output metadata for FASTQ
     fq-count         Counts lines in a FASTQ
     fq-dedup         Removes exact duplicates from FASTQ Files
+
+  MULTI:
+
+    iter             Iterate genomic ranges from a BAM or VCF for parallel execution
 
   BAM:
 
@@ -44,6 +49,9 @@ __BAM__
 
 __VCF__
 * [json](#json)
+
+__MULTI__
+* [iter](#iter)
 
 ## Usage
 
@@ -173,7 +181,6 @@ __Output__
 
 Calculate insert-size metrics on a set of bams.
 
-
 ### json (VCF to JSON conversion)
 
 Convert a VCF to JSON. This is most useful in the context of a web-service, where you can serve variant data for the purposes of visualization, browsing, etc. For an example of what this might look like, see the [elegans variation variant browser](https://elegansvariation.org/data/browser/).
@@ -243,6 +250,44 @@ typical output.
 * `GT` - Outputs genotypes as [[0, 0], [0, 1], [1, 1], ...
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
+
+### iter
+
+The `iter` command is used to generate genomic ranges that can be used to process genomic data in chunks. It works well with tools such as `xargs` or [gnu-parallel](https://www.gnu.org/software/parallel/).
+
+__Example__
+
+```bash
+sc iter test.bam 100,000 # Iterate on bins of 100k base pairs
+
+# Outputs
+> I:0-999999
+> I:1000000-1999999
+> I:2000000-2999999
+> I:3000000-3999999
+> I:4000000-4999999
+```
+
+These genomic ranges can be fed into tools such as variant callers.
+
+```bash
+
+function process_chunk {
+  # Code to process chunk
+  vcf=$1
+  region=$2
+  # e.g. bcftools call -m --region 
+  echo bcftools call --region $region $vcf # ...
+}
+
+# Export the function to make it available to GNU parallel
+export -f process_chunk
+
+parallel --verbose process_chunk ::: test.bam ::: $(sc iter tests/data/test.bam)
+
+```
+
+
 
 
 ### Cross-compilation
