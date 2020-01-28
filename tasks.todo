@@ -8,7 +8,7 @@ FQ-Dedup:
   ☐ Modify behavior to always output regardless of dups.
 
 Tools:
-  ☐ VCF2JSON
+  ☐ JSON (VCF)
   ☐ Library identification through correlated coverage?
   ☐ VCF2TAB
   ☐ random
@@ -16,7 +16,7 @@ Tools:
 https://www.ncbi.nlm.nih.gov/books/NBK25499/
 https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id=SRR015141&retmode=xml
 
-VCF2JSON:
+JSON:
   ☐ Add GT decoder → Genotype array
   ☐ Warn user about supplying region when pipeing in (no index)
   ☐ Disable keyboard interrupt warnings
@@ -24,7 +24,7 @@ VCF2JSON:
   ☐ Tests
   ☐ Warn user when --samples but no format field
 
-VCF2TAB:
+TSV:
   ☐ Convert VCF to tabular format ~ Wide or long
 
 Index Swap:
@@ -37,12 +37,12 @@ BAM:
     ☐ BAM list chromoomes
     ☐ BAM window iterator
     ☐ InsertSizeMetrics (picard replacement)
-    ☐ Tajima's D (Parallelize across chrom?)
-    ☐ Insert size calc → Parallelize across chromosome.
+    ✔ Insert size calc → Parallelize across chromosome. @done(20-01-28 06:07)
 
 VCF:
     ☐ VCF list chromosome
     ☐ VCF window iterator
     ☐ VCF Subsample?
+    ☐ Tajima's D (Parallelize across chrom?)
 
 Genome manager (a better one?):

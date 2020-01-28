@@ -22,7 +22,7 @@ import src/insert_size
 import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
-import src/vcf_window
+import src/genome_iter
 
 import src/utils/helpers
 
@@ -53,6 +53,11 @@ var p = newParser("sc"):
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
                     fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.basename, opts.absolute)
+    
+    #########
+    # FASTQ #
+    #########
+
     command("fq-count", group="FASTQ"):
         help("Counts lines in a FASTQ")
         flag("-t", "--header", help="Output the header")
@@ -73,7 +78,33 @@ var p = newParser("sc"):
         arg("fastq", nargs = 1, help = "Input FASTQ")
         run:
             fq_dedup.fq_dedup(opts.fastq)
-    
+
+    #######
+    # BAM #
+    #######
+
+    command("insert-size", group="BAM"):
+        help("Calculate insert-size metrics")
+        option("-d", "--dist", default="", help = "Output raw distribution(s)")
+        arg("bam", nargs = -1, help = "Input BAM")
+        flag("-t", "--header", help="Output the header")
+        flag("-b", "--basename", help="Add basename column")
+        flag("-a", "--absolute", help="Add column for absolute path")        
+        flag("-v", "--verbose", help="Provide additional information")
+        run:
+            if opts.header:
+                echo output_header(insert_size_header, opts.basename, opts.absolute)
+                quit()
+            if opts.bam.len == 0:
+                quit_error("No BAM specified", 3)
+            if opts.bam.len > 0:
+                for bam in opts.bam:
+                    insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
+
+    #######
+    # VCF #
+    #######
+
     command("json", group="VCF"):
         help("Convert a VCF to JSON")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -89,26 +120,8 @@ var p = newParser("sc"):
         flag("--debug", help="Debug")
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
-    
-    command("insert-size", group="BAM"):
-       help("Calculate insert-size metrics")
-       option("-d", "--dist", default="", help = "Output raw distribution(s)")
-       arg("bam", nargs = -1, help = "Input BAM")
-       flag("-t", "--header", help="Output the header")
-       flag("-b", "--basename", help="Add basename column")
-       flag("-a", "--absolute", help="Add column for absolute path")        
-       flag("-v", "--verbose", help="Provide additional information")
-       run:
-           if opts.header:
-               echo output_header(insert_size_header, opts.basename, opts.absolute)
-               quit()
-           if opts.bam.len == 0:
-               quit_error("No BAM specified", 3)
-           if opts.bam.len > 0:
-               for bam in opts.bam:
-                   insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
 
-    command("vcf2tsv", group="VCF"):
+    command("tsv", group="VCF"):
         help("Convert a VCF to TSV")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
         arg("region", nargs = -1, help="List of regions")
@@ -125,32 +138,13 @@ var p = newParser("sc"):
             elif opts.vcf.len > 0:
                 vcf2tsv(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.long, opts.annotation, opts.pass)
 
-    command("window", group="MULTI"):
-        help("Generate windows from a VCF for parallel execution")
-        arg("vcf", nargs = 1, help = "Input VCF")
-        arg("width", nargs = 1)
+    command("iter", group="MULTI"):
+        help("Generate genomic ranges for iteration from a BAM or VCF for parallel execution")
+        arg("input", nargs = 1, help = "Input VCF or BAM")
+        arg("width", default="10000", nargs = 1, help = "bp length")
         run:
-            vcf_window(opts.vcf)
+            genome_iter(opts.input)
     
-    # command("fasta", group="VCF"):
-    #     help("Convert a VCF to a FASTA file")
-    #     arg("vcf", nargs = 1, help="VCF to convert to JSON")
-    #     arg("region", nargs = -1, help="List of regions or bed files")
-    #     option("-s", "--samples", help="Set Samples", default="ALL")
-    #     option("-r", "--reference", help="Output full reference sequence")
-    #     flag("-f", "--force", help="Force output even if genotypes are not phased")
-    #     flag("-c", "--concat", help="Combine chromosomes into a single sequence")
-    #     flag("-m", "--merge", help="Merge samples into a single file and send to stdout")
-    #     run:
-    #         to_fasta(get_vcf(opts.vcf), opts.region, opts.samples, opts.force)
-
-    # command("index-swap", group="BAM"):
-    #     arg("BAM", nargs= -1, help="List of BAMs or CRAMs to examine")
-    #     option("-s", "--sites", help="List of sites to check (required)")
-    #     option("-f", "--fasta", help="Reference for use with CRAM files")
-    #     option("-t", "--threads", default="1", help="Threads")
-    #     run:
-    #         index_swaps(opts.BAM, opts.sites, opts.fasta, parseInt(opts.threads))
 
 # Check if input is from pipe
 var input_params = commandLineParams()

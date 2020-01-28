@@ -61,23 +61,15 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
 
 ### fq-dedup
 
-The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen, and I honestly do not know how it happens.
+The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen!
 
-The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates, and has to read through the file twice. If no duplicates are found during the first pass, the command will return 0 and print "No Duplicates Found" to `stderr`. If you are
-checking a set of FASTQs to remove duplicates, you can use the following bash to handle cases where duplicates are
-not found.
+The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates, and has to read through the file twice, and output the original FASTQ.
 
 ```bash
-(sc fq-dedup myfastq.fq.gz 2> dup.err) | gzip > out.fq.gz
-if [[ `head -n 1 dup.err` == "No Duplicates Found" ]]; then
-    # Handle case where duplicates are not found (probably by moving file)
-    mv myout.fq.gz out.dedup.fq.gz
-fi
+sc fq-dedup myfastq.fq.gz 2> dup.err | gzip > dedupped.fq.gz
 ```
 
-fq-dedup can read both `.gz` and raw text. It sends the deduplicated FASTQ to stdout.
-
-Be sure to use `-d:release` compiled binaries with this command otherwise its really slow.
+fq-dedup can read both `.fq.gz` and `.fq` files. It sends the deduplicated FASTQ to stdout.
 
 #### Output
 
