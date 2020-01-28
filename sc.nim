@@ -142,10 +142,10 @@ var p = newParser("sc"):
     command("iter", group="MULTI"):
         help("Generate genomic ranges for iteration from a BAM or VCF for parallel execution")
         arg("input", nargs = 1, help = "Input VCF or BAM")
-        arg("width", default="10000", nargs = 1, help = "bp length")
+        arg("width", default="10000", nargs = 1, help = "bp length; Set to 0 to list chromosomes")
         run:
             var width = opts.width.parseInt()
-            if width <= 0:
+            if width < 0:
                 quit_error("Width must be greater than 0")
             if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
                 var v:VCF

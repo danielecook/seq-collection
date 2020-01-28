@@ -161,3 +161,12 @@ assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:1-13794"
 run bam_iter sc iter tests/data/test.bam 1000000
 assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:0-999999"
 assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:0-13793"
+
+run iter_chrom_vcf sc iter tests/data/test.vcf 0
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA"
+
+run iter_chrom_bam sc iter tests/data/test.bam 0
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA"
+
