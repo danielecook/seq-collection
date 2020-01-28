@@ -7,10 +7,12 @@ license       = "MIT"
 
 # Dependencies
 
-requires "argparse >= 0.9.0", "colorize", "zip >= 0.2.1"
+requires "colorize", "zip >= 0.2.1"
 
 requires "https://github.com/danielecook/BitVector#b8cc21271c90cca96ed31f5d5383711dc96a8d3f"
 requires "https://github.com/brentp/hts-nim#423e9c87884e9ce6abe5e4b2a12168ac63fc8f53"
+#requires "argparse >= 0.9.0" 
+requires "https://github.com/iffy/nim-argparse#6257d1ac34607e7834eba31f459e9392d1ec06b7"
 
 bin = @["sc"]
 skipDirs = @["test"]
