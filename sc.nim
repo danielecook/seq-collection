@@ -101,6 +101,7 @@ var p = newParser("sc"):
        run:
            if opts.header:
                echo output_header(insert_size_header, opts.basename, opts.absolute)
+               quit()
            if opts.bam.len == 0:
                quit_error("No BAM specified", 3)
            if opts.bam.len > 0:
@@ -124,12 +125,12 @@ var p = newParser("sc"):
             elif opts.vcf.len > 0:
                 vcf2tsv(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.long, opts.annotation, opts.pass)
 
-    # command("window", group="VCF"):
-    #     help("Generate windows from a VCF for parallel execution")
-    #     arg("vcf", nargs = 1, help = "Input VCF")
-    #     arg("width", nargs = 1)
-    #     run:
-    #         vcf_window(opts.vcf)
+    command("window", group="MULTI"):
+        help("Generate windows from a VCF for parallel execution")
+        arg("vcf", nargs = 1, help = "Input VCF")
+        arg("width", nargs = 1)
+        run:
+            vcf_window(opts.vcf)
     
     # command("fasta", group="VCF"):
     #     help("Convert a VCF to a FASTA file")
