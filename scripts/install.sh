@@ -1,7 +1,6 @@
 #!/bin/bash
 
-
-#NOTE that to use this outside of travis, you'll want to export BRANCH=master
+# NOTE that to use this outside of travis, you'll want to export BRANCH=master
 
 set -euo pipefail
 export base=$(pwd)

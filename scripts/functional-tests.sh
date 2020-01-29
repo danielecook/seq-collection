@@ -149,3 +149,24 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 2 | tail -n 1)" "176.5"
 assert_equal "$(cat $STDOUT_FILE | cut -f 4 | tail -n 1)" "38"
 assert_equal "$(cat $STDOUT_FILE | cut -f 5 | tail -n 1)" "358"
 assert_equal "$(cat $STDOUT_FILE | cut -f 6 | tail -n 1)" "359"
+
+#======#
+# iter #
+#======#
+
+run vcf_iter sc iter tests/data/test.vcf 1000000
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:1-1000000"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:1-13794"
+
+run bam_iter sc iter tests/data/test.bam 1000000
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:0-999999"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:0-13793"
+
+run iter_chrom_vcf sc iter tests/data/test.vcf 0
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA"
+
+run iter_chrom_bam sc iter tests/data/test.bam 0
+assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I"
+assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA"
+

@@ -4,6 +4,41 @@
 
 A collection of useful sequencing utilities.
 
+
+```
+Sequence data utilities (Version 0.0.2)
+
+Usage:
+  sc [options] COMMAND
+
+Commands:
+
+  VCF:
+
+    json             Convert a VCF to JSON
+    tsv              Convert a VCF to TSV
+
+  FASTQ:
+
+    fq-meta          Output metadata for FASTQ
+    fq-count         Counts lines in a FASTQ
+    fq-dedup         Removes exact duplicates from FASTQ Files
+
+  MULTI:
+
+    iter             Iterate genomic ranges from a BAM or VCF for parallel execution
+
+  BAM:
+
+    insert-size      Calculate insert-size metrics
+
+Options:
+  --debug                    Debug
+  -h, --help                 Show this help
+  ```
+
+# Command Documentation
+
 __FASTQ__
 * [fq-dedup](#fq-dedup)
 * [fq-meta](#fq-meta)
@@ -14,8 +49,9 @@ __BAM__
 
 __VCF__
 * [json](#json)
-* [fasta](#fasta)
 
+__MULTI__
+* [iter](#iter)
 
 ## Usage
 
@@ -33,23 +69,15 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
 
 ### fq-dedup
 
-The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen, and I honestly do not know how it happens.
+The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen!
 
-The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates, and has to read through the file twice. If no duplicates are found during the first pass, the command will return 0 and print "No Duplicates Found" to `stderr`. If you are
-checking a set of FASTQs to remove duplicates, you can use the following bash to handle cases where duplicates are
-not found.
+The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates, and has to read through the file twice, and output the original FASTQ.
 
 ```bash
-(sc fq-dedup myfastq.fq.gz 2> dup.err) | gzip > out.fq.gz
-if [[ `head -n 1 dup.err` == "No Duplicates Found" ]]; then
-    # Handle case where duplicates are not found (probably by moving file)
-    mv myout.fq.gz out.dedup.fq.gz
-fi
+sc fq-dedup myfastq.fq.gz 2> dup.err | gzip > dedupped.fq.gz
 ```
 
-fq-dedup can read both `.gz` and raw text. It sends the deduplicated FASTQ to stdout.
-
-Be sure to use `-d:release` compiled binaries with this command otherwise its really slow.
+fq-dedup can read both `.fq.gz` and `.fq` files. It sends the deduplicated FASTQ to stdout.
 
 #### Output
 
@@ -73,7 +101,7 @@ __Benchmark__
 
 ### fq-count
 
-Count the number of reads in a FASTQ
+Count the number of reads in a FASTQ and other metrics.
 
 ### fq-meta
 
@@ -132,7 +160,7 @@ sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.
 
 ### insert-size
 
-Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard a lot faster. 
+Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard but a lot faster. 
 
 ```bash
 sc insert-size --header input.bam # One bam
@@ -152,7 +180,6 @@ __Output__
 
 
 Calculate insert-size metrics on a set of bams.
-
 
 ### json (VCF to JSON conversion)
 
@@ -223,6 +250,45 @@ typical output.
 * `GT` - Outputs genotypes as [[0, 0], [0, 1], [1, 1], ...
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
+
+### iter
+
+The `iter` command operates on BAM/CRAM and VCF/BCF files, and is used to generate genomic ranges that can be used to process genomic data in chunks. It works well with tools such as `xargs` or [gnu-parallel](https://www.gnu.org/software/parallel/).
+
+__Example__
+
+```bash
+sc iter test.bam 100,000 # Iterate on bins of 100k base pairs
+
+# Outputs
+> I:0-999999
+> I:1000000-1999999
+> I:2000000-2999999
+> I:3000000-3999999
+> I:4000000-4999999
+```
+
+This list of genomic ranges can be used to process a BAM or VCF in parallel:
+
+```bash
+
+function process_chunk {
+  # Code to process chunk
+  vcf=$1
+  region=$2
+  # e.g. bcftools call -m --region 
+  echo bcftools call --region $region $vcf # ...
+}
+
+# Export the function to make it available to GNU parallel
+export -f process_chunk
+
+parallel --verbose process_chunk ::: test.bam ::: $(sc iter test.bam)
+
+```
+
+You can also set the `[width]` option to 0 to generate a list of chromosomes.
+
 
 
 ### Cross-compilation

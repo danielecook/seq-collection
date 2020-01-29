@@ -26,7 +26,7 @@ const insert_size_header* = ["median",
                  "n_use",
                  "sample"].join("\t")
 
-const distribution_header = ["insert_size", "count", "sample", "filename"].join("\t")
+const distribution_header = ["insert_size", "count", "sample"].join("\t")
 
 proc accept_record(r: Record): bool = 
     if (r.flag.pair == false or
@@ -161,9 +161,9 @@ proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool, basename
     # Output distribution
     if distfile != "":
         var f = open(distfile, fmWrite)
-        f.writeLine(distribution_header)
+        f.writeLine(output_header(distribution_header, basename, absolute))
         for idx, val in inserts_trimmed.filterIt(it > 0):
-            f.writeLine([$idx, $val, bam_sample(b), fname].join("\t"))
+            f.writeLine(output_w_fnames([$idx, $val, bam_sample(b), fname].join("\t"), bamfile, basename, absolute))
         f.close()
 
     # Calc max
@@ -191,5 +191,5 @@ proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool, basename
                   $n_accept,
                   $(sum(inserts_trimmed)),
                   bam_sample(b)]
-    output_w_fnames(header_out.join("\t"), bamfile, basename, absolute)
+    echo output_w_fnames(header_out.join("\t"), bamfile, basename, absolute)
 

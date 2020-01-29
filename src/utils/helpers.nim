@@ -45,7 +45,7 @@ iterator variants*(vcf:VCF, regions: seq[string]): Variant =
 # Headers and Output #
 #====================#
 
-proc output_header*(header: string, basename: bool, absolute: bool) =
+proc output_header*(header: string, basename: bool, absolute: bool): string =
     var
         basename_str = ""
         absolute_str = ""
@@ -53,14 +53,14 @@ proc output_header*(header: string, basename: bool, absolute: bool) =
         basename_str = "basename"
     if absolute == true:
         absolute_str = "absolute"
-    echo [header, basename_str, absolute_str].filterIt(it.len > 0).join("\t")
+    return [header, basename_str, absolute_str].filterIt(it.len > 0).join("\t")
 
 proc get_absolute*(path: string): string =
     if symlinkExists(path) == true:
         return absolutePath(expandSymlink(path))
     return absolutePath(path)
 
-proc output_w_fnames*(header: string, path: string, basename: bool, absolute: bool) =
+proc output_w_fnames*(header: string, path: string, basename: bool, absolute: bool): string =
     # Attaches the basename or absolute if selected in a consistant manner
     var
         basename_str = ""
@@ -69,4 +69,4 @@ proc output_w_fnames*(header: string, path: string, basename: bool, absolute: bo
         basename_str = lastPathPart(path)
     if absolute == true:
         absolute_str = get_absolute(path)
-    echo [header, basename_str, absolute_str].filterIt(it.len > 0).join("\t")
+    return [header, basename_str, absolute_str].filterIt(it.len > 0).join("\t")
