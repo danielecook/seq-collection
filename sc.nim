@@ -95,8 +95,7 @@ var p = newParser("sc"):
         run:
             if opts.header:
                 echo output_header(insert_size_header, opts.basename, opts.absolute)
-                quit()
-            if opts.bam.len == 0:
+            elif opts.bam.len == 0:
                 quit_error("No BAM specified", 3)
             if opts.bam.len > 0:
                 for bam in opts.bam:
