@@ -67,8 +67,8 @@ var p = newParser("sc"):
         arg("fastq", nargs = -1, help = "Input FASTQ")
         run:
             if opts.header:
-                echo output_header(fq_meta_header, opts.basename, opts.absolute)
-            if opts.fastq.len == 0:
+                echo output_header(fq_count_header, opts.basename, opts.absolute)
+            elif opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:

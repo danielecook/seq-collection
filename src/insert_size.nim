@@ -1,13 +1,10 @@
-import tables
 import hts
 import sequtils
 import strutils
 import strformat
 import math
-import stats
 import os
 import colorize
-import re
 import algorithm
 import threadpool
 import utils/helpers
@@ -182,8 +179,8 @@ proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool, basename
     let std_dev = pow(variance, 0.5)
 
     var header_out = [$median_insert_size,
-                  $math.round(mean_insert_size, 3),
-                  $round(std_dev, 3),
+                  fmt"{mean_insert_size:0.3f}",
+                  fmt"{std_dev:0.3f}",
                   $min_insert_size,
                   $p99,
                   $max_insert,
