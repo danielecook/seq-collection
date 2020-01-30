@@ -24,6 +24,7 @@ import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
 import src/genome_iter
+import src/phylo
 
 import src/utils/helpers
 
@@ -137,6 +138,14 @@ var p = newParser("sc"):
                 quit_error("No VCF specified", 3)
             elif opts.vcf.len > 0:
                 vcf2tsv(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.long, opts.annotation, opts.pass)
+
+    command("phylo", group="VCF"):
+        help("Generate phylo files")
+        arg("vcf", nargs = 1, help="VCF to convert to JSON")
+        arg("region", nargs = -1, help="List of regions")
+        run:
+            vcf2phylo(get_vcf(opts.vcf), opts.region)
+            
 
     command("iter", group="MULTI"):
         help("Generate genomic ranges for iteration from a BAM or VCF for parallel execution")
