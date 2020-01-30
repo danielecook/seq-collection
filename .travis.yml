@@ -6,14 +6,16 @@ before_install:
   - export LD_LIBRARY_PATH=./htslib/
   - export PATH="$TRAVIS_BUILD_DIR:$TRAVIS_BUILD_DIR/nim-$BRANCH/bin:$PATH"
   - export NIM_LIB_PREFIX=$TRAVIS_BUILD_DIR/nim-$BRANCH/
+  - export CHOOSENIM_CHOOSE_VERSION=1.0.6
 
 install:
-  - bash ./scripts/install.sh
+  - curl https://nim-lang.org/choosenim/init.sh -sSf | sh
   - sudo apt-get install -y jq
 
 script: 
-  - nim c --threads:on -d:release --cc:$CC sc.nim
+  - nimble build --threads:on -d:release --cc:$CC sc.nim
   - bash ./scripts/functional-tests.sh
+  
 branches:
   except:
     - gh-pages
