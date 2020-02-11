@@ -1,8 +1,6 @@
 import re
 import strutils
 import strformat
-const contig_fields = @["ID", "length"]
-const info_fields = @["ID", "Number", "Type", "Description"]
 const format_fields = @["ID", "Number", "Type", "Description"]
 const filter_fields = @["ID", "Description"]
 

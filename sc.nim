@@ -1,7 +1,6 @@
 #
 # Author: Daniel E. Cook
 #
-import sugar
 import argparse
 import strformat
 import colorize
@@ -9,8 +8,6 @@ import tables
 import hts
 import strutils
 import sequtils
-import terminal
-import asyncfile
 import zip/gzipfiles
 import hts
 
@@ -23,6 +20,7 @@ import src/insert_size
 import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
+import src/tajimas_d
 import src/genome_iter
 import src/phylo
 
@@ -37,7 +35,6 @@ proc get_vcf(vcf: string): string =
     if vcf == "STDIN":
         return "-"
     return vcf
-
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
@@ -121,6 +118,17 @@ var p = newParser("sc"):
         flag("--debug", help="Debug")
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
+
+    command("tajima", group="VCF"):
+        help("Calculate tajimas D")
+        arg("vcf", nargs = 1, help="Calculate Tajima's D")
+        arg("region", nargs = -1, help="List of regions")
+        option("-w", "--window_size", default = "100000", help = "Window size")
+        option("-s", "--step_size", default = "100000", help = "Step size")
+        option("--sliding", default = "false", help = "Slide window")
+
+        run:
+            tajimas_d.calc_tajima(get_vcf(opts.vcf), opts.region)
 
     command("tsv", group="VCF"):
         help("Convert a VCF to TSV")
