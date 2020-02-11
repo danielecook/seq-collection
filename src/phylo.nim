@@ -6,7 +6,6 @@ import strformat
 import algorithm
 import sequtils
 import math
-import sets
 
 # Largely ported from https://github.com/edgardomortiz/vcf2phylip
 

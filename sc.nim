@@ -16,6 +16,7 @@ import src/fq_count
 import src/fq_dedup
 
 import src/insert_size
+import src/read_count
 
 import src/vcf2fasta
 import src/vcf2tsv
@@ -98,6 +99,14 @@ var p = newParser("sc"):
             if opts.bam.len > 0:
                 for bam in opts.bam:
                     insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
+
+    command("read-count", group="BAM"):
+        help("Generate read-counts")
+        arg("bam", nargs = 1, help = "Input BAM")
+        option("--positions", help="Output regions")
+        run:
+            read_count.cmd_read_count(opts.bam, opts.positions)
+
 
     #######
     # VCF #
