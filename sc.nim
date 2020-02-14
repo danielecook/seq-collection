@@ -17,6 +17,7 @@ import src/fq_dedup
 
 import src/insert_size
 import src/read_count
+import src/contamination
 
 import src/vcf2fasta
 import src/vcf2tsv
@@ -82,6 +83,14 @@ var p = newParser("sc"):
     #######
     # BAM #
     #######
+
+    command("contamination", group="BAM"):
+        help("Estimate contamination")
+        arg("bam", nargs = 1, help = "Input BAM")
+        arg("positions", help="Variant positions")
+        run:
+            contamination.cmd_contamination(opts.bam, opts.positions)
+
 
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
