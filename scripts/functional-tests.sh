@@ -11,48 +11,48 @@ export PATH="${PATH}:${PARENT_DIR}"
 #======#
 
 set -o nounset
-run test_json sc json "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+run test_json sc json "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844
 assert_equal \"X\" "$(cat "$STDOUT_FILE" | jq '.CHROM')"
 assert_equal 17276844 "$(cat "$STDOUT_FILE" | jq '.POS')"
 assert_equal "\"PASS\"" "$(cat "$STDOUT_FILE" | jq '.FILTER[0]')"
 assert_equal 999 "$(cat "$STDOUT_FILE" | jq '.QUAL')"
 assert_equal \"T\" "$(cat "$STDOUT_FILE" | jq '.REF')"
 
-run test_json_pretty sc json --pretty "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+run test_json_pretty sc json --pretty "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844
 assert_equal 13 $(cat $STDOUT_FILE | wc -l)
 
 # INFO
-run single_info_item sc json --info="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+run single_info_item sc json --info="DP" "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844
 assert_equal 9836 "$(cat $STDOUT_FILE | jq '.INFO.DP')"
 
-run multi_info_item sc json --info="DP,MQ,DP4,HOB,INDEL" "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+run multi_info_item sc json --info="DP,MQ,DP4,HOB,INDEL" "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844
 assert_equal 9836 "$(cat $STDOUT_FILE | jq '.INFO.DP')"
 assert_equal 60 "$(cat $STDOUT_FILE | jq '.INFO.MQ')"
 assert_equal 92 "$(cat $STDOUT_FILE | jq '.INFO.DP4[3]')"
 assert_equal 0.5 "$(cat $STDOUT_FILE | jq '.INFO.HOB')"
 
 # FORMAT
-run format_dp sc json --format="DP" "${PARENT_DIR}/tests/data/test.vcf.gz" I:41947-41947 | jq '.FORMAT.DP|add'
+run format_dp sc json --format="DP" "${PARENT_DIR}/tests/vcf/test.vcf.gz" I:41947-41947 | jq '.FORMAT.DP|add'
 assert_equal 2094 "$(cat $STDOUT_FILE | jq '.FORMAT.DP|add')"
 
 # GENOTYPE
-run gt sc json -f GT "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+run gt sc json -f GT "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844
 assert_equal 0 "$(cat $STDOUT_FILE | jq '.FORMAT.GT[0][0]')"
-run gt_all sc json -f ALL "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844
+run gt_all sc json -f ALL "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844
 assert_equal 0 "$(cat $STDOUT_FILE | jq '.FORMAT.GT[0][0]')"
 
 # CONVERT MISSING VALUES TO NULL
-run missing_float_to_null sc json -f PL "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844 
+run missing_float_to_null sc json -f PL "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844 
 assert_equal "null" "$(cat $STDOUT_FILE | jq -c '.FORMAT.PL[0]')"
-run missing_floats_to_null sc json -f PL "${PARENT_DIR}/tests/data/test.vcf.gz" X:17276844-17276844 
+run missing_floats_to_null sc json -f PL "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17276844-17276844 
 assert_equal "[null,null]" "$(cat $STDOUT_FILE | jq -c '.FORMAT.PL[0:2]')"
 
 #BCSQ
-run bcsq_gene sc json -i BCSQ -n "${PARENT_DIR}/tests/data/test.bcsq.vcf.gz" chr22:40679539-40679539 
+run bcsq_gene sc json -i BCSQ -n "${PARENT_DIR}/tests/vcf/test.bcsq.vcf.gz" chr22:40679539-40679539 
 assert_equal \"MCHR1\" "$(cat $STDOUT_FILE | jq -c '.INFO.BCSQ[0].gene')"
 
 # ARRAY
-run array_trailing_comma sc json -a "${PARENT_DIR}/tests/data/test.vcf.gz" X:17261695-17276844
+run array_trailing_comma sc json -a "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:17261695-17276844
 assert_equal , "$(cat $STDOUT_FILE | tail -n 3 | head -n1 | awk '{print substr($0,length,1)}')"
 assert_equal \} "$(cat $STDOUT_FILE | tail -n 2 | head -n1 | awk '{print substr($0,length,1)}')"
 
@@ -143,7 +143,7 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 3)" "high:machine+flowcell"
 #=============#
 # Insert size #
 #=============#
-run insert_size sc insert-size tests/data/test.bam
+run insert_size sc insert-size tests/bam/test.bam
 assert_equal "$(cat $STDOUT_FILE | cut -f 1 | tail -n 1)" "179"
 assert_equal "$(cat $STDOUT_FILE | cut -f 2 | tail -n 1)" "176.5"
 assert_equal "$(cat $STDOUT_FILE | cut -f 4 | tail -n 1)" "38"
@@ -154,19 +154,19 @@ assert_equal "$(cat $STDOUT_FILE | cut -f 6 | tail -n 1)" "359"
 # iter #
 #======#
 
-run vcf_iter sc iter tests/data/test.vcf 1000000
+run vcf_iter sc iter tests/bam/test.vcf 1000000
 assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:1-1000000"
 assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:1-13794"
 
-run bam_iter sc iter tests/data/test.bam 1000000
+run bam_iter sc iter tests/bam/test.bam 1000000
 assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I:0-999999"
 assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA:0-13793"
 
-run iter_chrom_vcf sc iter tests/data/test.vcf 0
+run iter_chrom_vcf sc iter tests/bam/test.vcf 0
 assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I"
 assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA"
 
-run iter_chrom_bam sc iter tests/data/test.bam 0
+run iter_chrom_bam sc iter tests/bam/test.bam 0
 assert_equal "$(cat $STDOUT_FILE | head -n 1)" "I"
 assert_equal "$(cat $STDOUT_FILE | tail -n 1)" "MtDNA"
 
