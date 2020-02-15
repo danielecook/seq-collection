@@ -57,7 +57,7 @@ proc get_target_bases(record: Record, targets: seq[Position], min_base_qual: uin
     var offset_1 = targets[0].pos.int - record.start.int
     var offset_2 = targets[1].pos.int - record.start.int
     var q1 = if offset_1 >= 0: record.base_quality_at(offset_1) else: 0.uint8
-    var q2 = if offset_1 >= 0: record.base_quality_at(offset_1) else: 0.uint8
+    var q2 = if offset_1 >= 0: record.base_quality_at(offset_2) else: 0.uint8
     var a1 = if q1 > min_base_qual: record.base_at(offset_1) else: '.'
     var a2 = if q2 > min_base_qual: record.base_at(offset_2) else: '.'
     return @[a1, a2] 
