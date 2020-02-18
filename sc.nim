@@ -18,6 +18,7 @@ import src/fq_dedup
 import src/insert_size
 import src/read_count
 import src/contamination
+import src/fusion
 
 import src/vcf2fasta
 import src/vcf2tsv
@@ -91,6 +92,11 @@ var p = newParser("sc"):
         run:
             contamination.cmd_contamination(opts.bam, opts.positions)
 
+    command("fusion", group="BAM"):
+        help("Call fusions from DNA data")
+        arg("bam", nargs = 1, help = "Input BAM")
+        run:
+            fusion.cmd_fusion(opts.bam)
 
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
