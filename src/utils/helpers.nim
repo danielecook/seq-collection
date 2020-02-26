@@ -45,10 +45,10 @@ iterator variants*(vcf:VCF, regions: seq[string]): Variant =
 # Bedfile reader #
 #================#
 type region_t* = ref object
-    chrom: string
-    start: uint32
-    stop: uint32
-    name: string
+    chrom*: string
+    start*: uint32
+    stop*: uint32
+    name*: string
 
 proc bed_line_to_region*(line: string): region_t =
     var
