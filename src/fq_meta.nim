@@ -1,9 +1,7 @@
 import sequtils
 import strutils
-import utils/gz
 import os
 import re
-import sets
 import streams
 import zip/gzipfiles
 import utils/helpers

@@ -1,8 +1,6 @@
-import memfiles
 import streams
 import zip/gzipfiles
 import utils/helpers
-import strformat
 import strutils
 import os
 

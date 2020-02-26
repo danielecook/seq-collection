@@ -1,5 +1,4 @@
 import hts
-import sequtils
 import strutils
 import strformat
 import math
@@ -7,8 +6,9 @@ import os
 import colorize
 import algorithm
 import threadpool
+import ggplotnim
+import sequtils
 import utils/helpers
-#import ggplotnim
 
 const INS_ARR = 10000
 
@@ -142,26 +142,26 @@ proc cmd_insert_size*(bamfile: string, distfile: string, verbose: bool, basename
     let median_insert_size = median_freq(inserts_trimmed)
     let mean_insert_size = mean_freq(inserts_trimmed)
     let min_insert_size = inserts_trimmed.find(inserts_trimmed.filterIt(it > 0)[0]) + 1
-    
-    # # Plotting
-    # let x = toSeq(1..inserts_trimmed.len)
-    # #echo x
-    # let y = inserts_trimmed
-    # #echo inserts_trimmed
-    # var df = seqsToDf(x, y).filter( f{ "y" > 0 } )
-    # echo df
-    # ggplot(df, aes(x = "x", y = "y")) +
-    #     geom_point() +
-    #     ggtitle("ggplotnim - or I Suck At Naming Things™") +
-    #     ggsave("scatterColor.pdf")
 
     # Output distribution
+    # var x: seq[int]
+    # var y: seq[int]
+    
     if distfile != "":
         var f = open(distfile, fmWrite)
         f.writeLine(output_header(distribution_header, basename, absolute))
         for idx, val in inserts_trimmed.filterIt(it > 0):
+            # x.add idx
+            # y.add val.int
             f.writeLine(output_w_fnames([$idx, $val, bam_sample(b), fname].join("\t"), bamfile, basename, absolute))
         f.close()
+
+    
+    # var df = seqsToDf(x, y).filter( f{ "y" > 0 } )
+    # echo df
+    # ggplot(df, aes(x = "x1", y = "y1")) +
+    # geom_point() +
+    # ggsave("scatterColor.pdf")
 
     # Calc max
     if overflow.len > 0:

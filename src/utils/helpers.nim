@@ -41,6 +41,31 @@ iterator variants*(vcf:VCF, regions: seq[string]): Variant =
         else:
             for v in vcf.query(region): yield v
 
+#================#
+# Bedfile reader #
+#================#
+type region_t* = ref object
+    chrom: string
+    start: uint32
+    stop: uint32
+    name: string
+
+proc bed_line_to_region*(line: string): region_t =
+    var
+        cse = line.strip().split('\t', 5)
+    
+    if len(cse) < 3:
+        stderr.write_line("[seq-collection] skipping bad bed line:", line.strip())
+        return nil
+    var
+        s = strutils.parse_int(cse[1])
+        e = strutils.parse_int(cse[2])
+        reg = region_t(chrom: cse[0], start: uint32(s), stop: uint32(e))
+    doAssert s <= e, "[seq-collection] ERROR: start > end in bed line:" & line
+    if len(cse) > 3:
+        reg.name = cse[3]
+    return reg
+
 #====================#
 # Headers and Output #
 #====================#

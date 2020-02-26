@@ -19,6 +19,7 @@ import src/insert_size
 import src/read_count
 import src/contamination
 import src/fusion
+import src/slice
 
 import src/vcf2fasta
 import src/vcf2tsv
@@ -177,6 +178,14 @@ var p = newParser("sc"):
         arg("region", nargs = -1, help="List of regions")
         run:
             vcf2phylo(get_vcf(opts.vcf), opts.region)
+
+
+    command("slice", group="MULTI"):
+        help("Cleanly slice FASTA, BAM, and VCF files")
+        arg("bam", nargs = 1, help="BAM to slice")
+        arg("region", nargs = 1, help="Sorted region file")
+        run:
+            cmd_slice(opts.bam, opts.region)
             
 
     command("iter", group="MULTI"):
