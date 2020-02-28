@@ -50,6 +50,9 @@ type region_t* = ref object
     stop*: uint32
     name*: string
 
+proc `$`*(t: region_t): string =
+    return fmt"{t.chrom}:{t.start}-{t.stop}"
+
 proc bed_line_to_region*(line: string): region_t =
     var
         cse = line.strip().split('\t', 5)

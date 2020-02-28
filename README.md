@@ -59,7 +59,7 @@ Install using `nim c sc.nim`
 
 ## Development
 
-As I have done in the past, I intend to develop `seq-kit` over a period of months or years. In general, this means I'll add a new tool or utility when it becomes apparent that I need it.
+As I have done in the past, I intend to develop `seq-collection` over a period of months or years. In general, this means I'll add a new tool or utility when it becomes apparent that I need it.
 
 However, I am open to PRs, requests, and feedback. Please let me know what you think.
 
