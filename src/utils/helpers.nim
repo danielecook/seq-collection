@@ -4,6 +4,10 @@ import strutils
 import strformat
 import colorize
 import sequtils
+import Tables
+import lapper
+import streams
+import zip/gzipfiles
 
 proc quit_error*(msg: string, error_code = 1) =
     stderr.write_line fmt"Error {error_code}".bgWhite.fgRed & fmt": {msg}".fgRed
@@ -44,16 +48,22 @@ iterator variants*(vcf:VCF, regions: seq[string]): Variant =
 #================#
 # Bedfile reader #
 #================#
-type region_t* = ref object
+    
+type region* = ref object of RootObj
     chrom*: string
-    start*: uint32
-    stop*: uint32
-    name*: string
+    start*: int
+    stop*: int
+    val*: string
 
-proc `$`*(t: region_t): string =
-    return fmt"{t.chrom}:{t.start}-{t.stop}"
 
-proc bed_line_to_region*(line: string): region_t =
+proc start*(m: region): int {.inline.} = return m.start
+proc stop*(m: region): int {.inline.} = return m.stop
+proc `$`(m:region): string = return "(start:$#, stop:$#, val:$#)" % [$m.start, $m.stop, $m.val]
+   
+type region_set* = Table[string, seq[region]]
+type lapper_set* = Table[string, lapper.Lapper[region]]
+
+proc bed_line_to_region*(line: string): region =
     var
         cse = line.strip().split('\t', 5)
     
@@ -63,11 +73,28 @@ proc bed_line_to_region*(line: string): region_t =
     var
         s = strutils.parse_int(cse[1])
         e = strutils.parse_int(cse[2])
-        reg = region_t(chrom: cse[0], start: uint32(s), stop: uint32(e))
+        reg = region(chrom: cse[0], start: int(s), stop: int(e))
     doAssert s <= e, "[seq-collection] ERROR: start > end in bed line:" & line
     if len(cse) > 3:
-        reg.name = cse[3]
+        reg.val = cse[3]
     return reg
+
+proc bedfile_to_lapper*(bed_file: string): lapper_set =
+    var rs: region_set
+    var ls = initTable[string, lapper.Lapper[region]]()
+    let stream: Stream =
+        if bed_file[^3 .. ^1] == ".gz":
+            newGZFileStream(bed_file)
+        else:
+            newFileStream(bed_file, fmRead)
+    for line in lines(stream):
+        var r = bed_line_to_region(line)
+        if rs.hasKey(r.chrom) == false:
+            rs[r.chrom] = new_seq[region](0)
+        rs[r.chrom].add r
+    for chrom in rs.keys:
+        ls[chrom] = lapify(rs[chrom])
+    return ls
 
 #====================#
 # Headers and Output #

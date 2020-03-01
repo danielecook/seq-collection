@@ -7,7 +7,7 @@ license       = "MIT"
 
 # Dependencies
 
-requires "colorize", "zip >= 0.2.1"#, "ggplotnim==0.2.9"
+requires "colorize", "zip >= 0.2.1", "lapper"#, "ggplotnim==0.2.9"
 
 requires "https://github.com/Vindaar/ggplotnim#b736f1fc5027a7613b8309ef774422866042685e"
 requires "https://github.com/danielecook/BitVector#b8cc21271c90cca96ed31f5d5383711dc96a8d3f"
