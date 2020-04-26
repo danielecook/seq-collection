@@ -4,6 +4,9 @@ on:
   - push
   - pull_request
 
+env:
+  LD_LIBRARY_CACHE: ${{ format('{0}/htslib', env.HOME) }}
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -51,7 +54,7 @@ jobs:
 
     # Setup htslib
     - name: Install htslib (linux)
-      if: matrix.os == "ubuntu-16.04"
+      if: runner.os == 'Linux'
       run: |
         cd
         git clone --recursive https://github.com/samtools/htslib.git
@@ -61,7 +64,7 @@ jobs:
         ls -lh $HOME/htslib/*.so
 
     - name: Install hstlib (macos)
-      if: matrix.os == "macos-10.15"
+      if: runner.os == 'macOS'
       run: |
         brew install htslib
 
