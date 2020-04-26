@@ -45,7 +45,7 @@ jobs:
 
     # Install Dependencies
     - name: Install dependencies (Linux)
-      if: matrix.os == "ubuntu-16.04"
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get -qy install bwa make build-essential cmake libncurses-dev ncurses-dev libbz2-dev lzma-dev liblzma-dev \
