@@ -7,10 +7,7 @@ on:
 
 jobs:
   build:
-  
-    env:
-      LD_LIBRARY_CACHE: ${{ format('{0}/htslib', env.HOME) }}
-      
+
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -63,6 +60,7 @@ jobs:
         cd htslib && git checkout 1.10 && autoheader && autoconf && ./configure --enable-libcurl
         cd
         make -j 4 -C htslib
+        echo "::set-env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/htslib"
         ls -lh $HOME/htslib/*.so
 
     - name: Install hstlib (macos)
@@ -81,12 +79,11 @@ jobs:
       env:
         TERM: "xterm"
       run: |
-        export LD_LIBRARY_PATH="${HOME}/htslib"
         bash ./scripts/functional-tests.sh
 
     - name: Unit Tests
       run: |
-        export LD_LIBRARY_PATH="${HOME}/htslib"
+        echo "Great"
 
     #- run: nimble test -Y
     - name: Upload Artifact
