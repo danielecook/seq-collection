@@ -7,24 +7,6 @@ import utils/helpers
 import utils/vcf_header
 import streams
 from constants import ANN_header
-
-proc `%`(s: string): JsonNode =
-  # Overload JsonNode to string
-  # Important for converting
-  # '.' to null values
-  if s == ".":
-    result = newJNull()
-  else:
-    result = newJString(s)
-    
-proc `%`(s: int): JsonNode =
-  # Overload JsonNode from int
-  # Important for converting
-  # '.' to null values
-  if s == int.low:
-    result = newJNull()
-  else:
-    result = newJInt(s)
     
 proc out_fmt[T](record: T, fmt_field: FormatField, zip: bool, samples: seq[string]): JsonNode =
     # For fascilitating formatting FORMAT fields
@@ -184,16 +166,3 @@ proc vcf2tsv*(vcf: string, region_list: seq[string], sample_set: string, info: s
                          $rec.QUAL,
                          $rec.FILTER]
         echo base_rec
-        # if info_keep.len > 0:
-        #     json_out.add("INFO", j_info)
-        # if format_keep.len > 0:
-        #     json_out.add("FORMAT", j_format)
-    
-        # if pretty:
-        #     stdout.write $json_out.pretty()
-        # else:
-        #     stdout.write $json_out
-        # if array:
-        #     stdout.write ",\n"
-        # else:
-        #     stdout.write "\n"

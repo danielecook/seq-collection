@@ -89,7 +89,7 @@ var p = newParser("sc"):
     command("contamination", group="BAM"):
         help("Estimate contamination")
         arg("bam", nargs = 1, help = "Input BAM")
-        arg("positions", help="Variant positions")
+        arg("positions", help = "Variant positions")
         run:
             contamination.cmd_contamination(opts.bam, opts.positions)
 
@@ -151,7 +151,6 @@ var p = newParser("sc"):
         option("-w", "--window_size", default = "100000", help = "Window size")
         option("-s", "--step_size", default = "100000", help = "Step size")
         option("--sliding", default = "false", help = "Slide window")
-
         run:
             tajimas_d.calc_tajima(get_vcf(opts.vcf), opts.region)
 
@@ -210,7 +209,7 @@ var p = newParser("sc"):
 var input_params = commandLineParams()
 if getFileInfo(stdin).id.device==0:
     if input_params.find("-") > -1:
-       input_params[input_params.find("-")] = "STDIN"
+        input_params[input_params.find("-")] = "STDIN"
     else:
         input_params.add("STDIN")
 

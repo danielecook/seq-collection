@@ -17,7 +17,7 @@ proc between[T](val, start, stop: T): bool =
 proc in_region(chrom: string, pos: int, ls: lapper_set): bool =
     var empty:seq[region]
     if ls.hasKey(chrom):
-        var l = ls[chrom]
+        var l = ls[chrom] # Not sure why but this seems necessary
         return l.find(pos, pos, empty)
     return false
 

@@ -99,7 +99,6 @@ proc bedfile_to_lapper*(bed_file: string): lapper_set =
 #====================#
 # Headers and Output #
 #====================#
-
 proc output_header*(header: string, basename: bool, absolute: bool): string =
     var
         basename_str = ""
