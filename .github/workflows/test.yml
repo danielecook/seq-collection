@@ -4,11 +4,13 @@ on:
   - push
   - pull_request
 
-env:
-  LD_LIBRARY_CACHE: ${{ format('{0}/htslib', env.HOME) }}
 
 jobs:
   build:
+  
+    env:
+      LD_LIBRARY_CACHE: ${{ format('{0}/htslib', env.HOME) }}
+      
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
