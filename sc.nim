@@ -200,11 +200,11 @@ proc get_params(): seq[string] =
     var input_params = commandLineParams()
     var use_stdin = false
 
-    when defined(linux):
-        use_stdin = terminal.isatty(stdin)
-
-    elif defined(macosx):
+    when defined(macosx):
         use_stdin = getFileInfo(stdin).id.device == 0
+
+    elif defined(linux):
+        use_stdin = terminal.isatty(stdin)
 
     if use_stdin == true:
         if input_params.find("-") > -1:
