@@ -10,7 +10,6 @@ import strutils
 import sequtils
 import zip/gzipfiles
 import hts
-import terminal
 
 import src/fq_meta
 import src/fq_count
@@ -195,7 +194,15 @@ var p = newParser("sc"):
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if terminal.isatty(stdin) == false:
+var use_stdin = false
+
+when defined(linux):
+    use_stdin = terminal.isatty(stdin)
+
+elif defined(macosx):
+    use_stdin = getFileInfo(stdin).id.device == 0
+
+if use_stdin == true:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:
