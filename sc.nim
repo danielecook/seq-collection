@@ -10,6 +10,7 @@ import strutils
 import sequtils
 import zip/gzipfiles
 import hts
+import terminal
 
 import src/fq_meta
 import src/fq_count
@@ -27,6 +28,8 @@ import src/genome_iter
 import src/phylo
 
 import src/utils/helpers
+
+# TODO: Test todo
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
@@ -192,7 +195,7 @@ var p = newParser("sc"):
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if getFileInfo(stdin).id.device==0:
+if terminal.isatty(stdin) == false:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:
