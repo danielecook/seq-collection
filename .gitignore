@@ -9,3 +9,8 @@ ssshtest
 bam_set/
 *.csi
 *.tbi
+sc
+benchmarks/*
+illumina_instrument.py
+.envrc
+vcf2phylip/*

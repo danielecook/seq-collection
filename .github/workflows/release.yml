@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, macos-10.15]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Runs a single command using the runners shell
+    - name: Setup Nim environment
+      uses: jiro4989/setup-nim-action@v1.0.2
+      with:
+          nim-version: 1.0.6 # optional, default is stable
+
+    - name: Build executable
+      run: nimble build -y sc.nimble && chmod +x til && mkdir bin && mv til bin
+    
+    - name: Functional Tests
+      run: 
+
+    # - name: Upload Artifact
+    #   if: success()
+    #   uses: actions/upload-artifact@v1.0.0
+    #   with:
+    #     # Artifact name
+    #       name: sc
+    #       path: bin
+
+    - name: Create Release
+      id: create_release
+      if: matrix.os == 'ubuntu-16.04'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v1-release
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: bin/til
+        asset_name: til_${{ matrix.os }}
+        tag: ${{ github.ref }}
+        overwrite: true

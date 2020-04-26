@@ -18,7 +18,6 @@ import src/fq_dedup
 import src/insert_size
 import src/read_count
 import src/contamination
-import src/fusion
 
 import src/vcf2fasta
 import src/vcf2tsv
@@ -91,12 +90,6 @@ var p = newParser("sc"):
         arg("positions", help="Variant positions")
         run:
             contamination.cmd_contamination(opts.bam, opts.positions)
-
-    command("fusion", group="BAM"):
-        help("Call fusions from DNA data")
-        arg("bam", nargs = 1, help = "Input BAM")
-        run:
-            fusion.cmd_fusion(opts.bam)
 
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
@@ -184,7 +177,7 @@ var p = newParser("sc"):
         arg("input", nargs = 1, help = "Input VCF or BAM")
         arg("width", default="10000", nargs = 1, help = "bp length; Set to 0 to list chromosomes")
         run:
-            var width = opts.width.replace(",", "").parseInt()
+            var width = helpers.sci_parse_int(opts.width)
             if width < 0:
                 quit_error("Width must be greater than 0")
             if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):

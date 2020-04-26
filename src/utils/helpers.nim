@@ -1,5 +1,6 @@
 import os
 import hts
+import math
 import strutils
 import strformat
 import colorize
@@ -70,3 +71,16 @@ proc output_w_fnames*(header: string, path: string, basename: bool, absolute: bo
     if absolute == true:
         absolute_str = get_absolute(path)
     return [header, basename_str, absolute_str].filterIt(it.len > 0).join("\t")
+
+#=========#
+# Parsing #
+#=========#
+
+proc sci_parse_int*(s: string): int =
+    # Parses ints with comma delimiters and scientific notation.
+    if 'e' in s:
+        var scientific_notation = s.split("e", maxsplit = 1)
+        let coeff = scientific_notation[0].parseInt()
+        let exponent = scientific_notation[1].parseInt()
+        return math.pow(coeff.float * 10.0, exponent.float).int
+    return s.replace(",", "").parseInt()
