@@ -36,10 +36,12 @@ signal(SIG_PIPE, SIG_IGN)
 
 const VERSION = "0.0.2"
 
-proc get_vcf(vcf: string): string =
-    if vcf == "STDIN":
+proc parse_stdin(s: string): string =
+    # Flips args with STDIN to "-"
+    # to get around argparse limitation
+    if s == "STDIN":
         return "-"
-    return vcf
+    return s
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
@@ -137,7 +139,7 @@ var p = newParser("sc"):
         flag("--pass", help="Only output variants where FILTER=PASS")
         flag("--debug", help="Debug")
         run:
-            to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
+            to_json(parse_stdin(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
 
     command("tajima", group="VCF"):
         help("Calculate tajimas D")
@@ -148,7 +150,7 @@ var p = newParser("sc"):
         option("--sliding", default = "false", help = "Slide window")
 
         run:
-            tajimas_d.calc_tajima(get_vcf(opts.vcf), opts.region)
+            tajimas_d.calc_tajima(parse_stdin(opts.vcf), opts.region)
 
     command("tsv", group="VCF"):
         help("Convert a VCF to TSV")
@@ -172,7 +174,7 @@ var p = newParser("sc"):
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
         arg("region", nargs = -1, help="List of regions")
         run:
-            vcf2phylo(get_vcf(opts.vcf), opts.region)
+            vcf2phylo(parse_stdin(opts.vcf), opts.region)
             
 
     command("iter", group="MULTI"):
@@ -193,21 +195,26 @@ var p = newParser("sc"):
                 genome_iter(b, width)
     
 
-# Check if input is from pipe
-var input_params = commandLineParams()
-var use_stdin = false
+proc get_params(): seq[string] =
+    # Check if input is from pipe
+    var input_params = commandLineParams()
+    var use_stdin = false
 
-when defined(linux):
-    use_stdin = terminal.isatty(stdin)
+    when defined(linux):
+        use_stdin = terminal.isatty(stdin)
 
-elif defined(macosx):
-    use_stdin = getFileInfo(stdin).id.device == 0
+    elif defined(macosx):
+        use_stdin = getFileInfo(stdin).id.device == 0
 
-if use_stdin == true:
-    if input_params.find("-") > -1:
-       input_params[input_params.find("-")] = "STDIN"
-    else:
-        input_params.add("STDIN")
+    if use_stdin == true:
+        if input_params.find("-") > -1:
+            input_params[input_params.find("-")] = "STDIN"
+        else:
+            input_params.add("STDIN")
+    
+    return input_params
+
+var input_params = get_params()
 
 if input_params.len <= 1:
     input_params.add("-h")
