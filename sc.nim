@@ -10,6 +10,7 @@ import strutils
 import sequtils
 import zip/gzipfiles
 import hts
+import terminal
 
 import src/fq_meta
 import src/fq_count
