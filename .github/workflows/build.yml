@@ -31,7 +31,8 @@ jobs:
         path: ~/.nimble
         key: ${{ runner.os }}-nimble-stable
 
-    - name: Cache htslib
+    - name: Cache htslib (Linux)
+      if: runner.os == 'Linux'
       id: cache-htslib
       uses: actions/cache@v1
       with:
