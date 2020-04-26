@@ -7,6 +7,7 @@ import sets
 import streams
 import zip/gzipfiles
 import utils/helpers
+import tables
 
 const qual = """!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
 const fq_meta_header* = ["machine",
@@ -26,10 +27,8 @@ const fq_meta_header* = ["machine",
                          "max_qual",
                          "n_lines"].join("\t")
 
-import tables
-
 type 
-    Fastq* = object
+    Fastq* = ref object
         name*: string
         phred*: string
         minimum*, maximum*: int

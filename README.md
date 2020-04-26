@@ -1,9 +1,6 @@
 # seq-collection
 
-[![Build Status](https://travis-ci.org/danielecook/seq-collection.svg?branch=development)](https://travis-ci.org/danielecook/seq-collection)
-
 A collection of useful sequencing utilities.
-
 
 ```
 Sequence data utilities (Version 0.0.2)
@@ -259,6 +256,8 @@ __Example__
 
 ```bash
 sc iter test.bam 100,000 # Iterate on bins of 100k base pairs
+sc iter test.bam 100000 # Also valid
+sc iter test.bam 1e6 # Also valid
 
 # Outputs
 > I:0-999999

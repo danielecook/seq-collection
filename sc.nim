@@ -1,7 +1,6 @@
 #
 # Author: Daniel E. Cook
 #
-import sugar
 import argparse
 import strformat
 import colorize
@@ -9,23 +8,28 @@ import tables
 import hts
 import strutils
 import sequtils
-import terminal
-import asyncfile
 import zip/gzipfiles
 import hts
+import terminal
 
 import src/fq_meta
 import src/fq_count
 import src/fq_dedup
 
 import src/insert_size
+import src/read_count
+import src/contamination
 
 import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
+import src/tajimas_d
 import src/genome_iter
+import src/phylo
 
 import src/utils/helpers
+
+# TODO: Test todo
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
@@ -36,7 +40,6 @@ proc get_vcf(vcf: string): string =
     if vcf == "STDIN":
         return "-"
     return vcf
-
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
@@ -67,8 +70,8 @@ var p = newParser("sc"):
         arg("fastq", nargs = -1, help = "Input FASTQ")
         run:
             if opts.header:
-                echo output_header(fq_meta_header, opts.basename, opts.absolute)
-            if opts.fastq.len == 0:
+                echo output_header(fq_count_header, opts.basename, opts.absolute)
+            elif opts.fastq.len == 0:
                 quit_error("No FASTQ specified", 3)
             if opts.fastq.len > 0:
                 for fastq in opts.fastq:
@@ -83,6 +86,13 @@ var p = newParser("sc"):
     #######
     # BAM #
     #######
+
+    command("contamination", group="BAM"):
+        help("Estimate contamination")
+        arg("bam", nargs = 1, help = "Input BAM")
+        arg("positions", help="Variant positions")
+        run:
+            contamination.cmd_contamination(opts.bam, opts.positions)
 
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
@@ -100,6 +110,14 @@ var p = newParser("sc"):
             if opts.bam.len > 0:
                 for bam in opts.bam:
                     insert_size.cmd_insert_size(bam, opts.dist, opts.verbose, opts.basename, opts.absolute)
+
+    command("read-count", group="BAM"):
+        help("Generate read-counts")
+        arg("bam", nargs = 1, help = "Input BAM")
+        option("--positions", help="Output regions")
+        run:
+            read_count.cmd_read_count(opts.bam, opts.positions)
+
 
     #######
     # VCF #
@@ -121,6 +139,17 @@ var p = newParser("sc"):
         run:
             to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
 
+    command("tajima", group="VCF"):
+        help("Calculate tajimas D")
+        arg("vcf", nargs = 1, help="Calculate Tajima's D")
+        arg("region", nargs = -1, help="List of regions")
+        option("-w", "--window_size", default = "100000", help = "Window size")
+        option("-s", "--step_size", default = "100000", help = "Step size")
+        option("--sliding", default = "false", help = "Slide window")
+
+        run:
+            tajimas_d.calc_tajima(get_vcf(opts.vcf), opts.region)
+
     command("tsv", group="VCF"):
         help("Convert a VCF to TSV")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -138,12 +167,20 @@ var p = newParser("sc"):
             elif opts.vcf.len > 0:
                 vcf2tsv(opts.vcf, opts.region, opts.samples, opts.info, opts.format, opts.long, opts.annotation, opts.pass)
 
+    command("phylo", group="VCF"):
+        help("Generate phylo files")
+        arg("vcf", nargs = 1, help="VCF to convert to JSON")
+        arg("region", nargs = -1, help="List of regions")
+        run:
+            vcf2phylo(get_vcf(opts.vcf), opts.region)
+            
+
     command("iter", group="MULTI"):
         help("Generate genomic ranges for iteration from a BAM or VCF for parallel execution")
         arg("input", nargs = 1, help = "Input VCF or BAM")
         arg("width", default="10000", nargs = 1, help = "bp length; Set to 0 to list chromosomes")
         run:
-            var width = opts.width.replace(",", "").parseInt()
+            var width = helpers.sci_parse_int(opts.width)
             if width < 0:
                 quit_error("Width must be greater than 0")
             if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
@@ -158,7 +195,7 @@ var p = newParser("sc"):
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if getFileInfo(stdin).id.device==0:
+if terminal.isatty(stdin) == false:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:

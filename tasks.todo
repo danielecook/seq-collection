@@ -1,5 +1,6 @@
 General:
   ☐ Fetch test datasets 
+  ☐ Add plotting back to insert size
 
 FQ-Meta:
   ☐ Fetch information on SRR/SRA data from API?
