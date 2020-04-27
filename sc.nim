@@ -12,14 +12,20 @@ import zip/gzipfiles
 import hts
 import terminal
 
+# fasta
+import src/fa_gc
+
+# fastq
 import src/fq_meta
 import src/fq_count
 import src/fq_dedup
 
+# bam
 import src/insert_size
 import src/read_count
 import src/contamination
 
+# vcf
 import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
@@ -63,7 +69,14 @@ var p = newParser("sc"):
     #########
     # FASTA #
     #########
-
+    var b = newSeq[int](3)
+    command("fa-gc", group="FASTA"):
+        help("Calculate GC content surrouding a location")
+        arg("fasta", nargs = 1, help = "Input FASTQ")
+        option("-p", "--pos", help = "VCF, BED, or string position")
+        arg("windows", nargs = -1, help = "Window-sizes")
+        run:
+            fa_gc.fa_gc(opts.fasta, opts.pos, opts.windows)
 
 
     #########

@@ -1,21 +1,24 @@
 import os
 import hts
 import math
+import streams
+import zip/gzipfiles
 import strutils
 import strformat
 import colorize
 import sequtils
 
+
 proc quit_error*(msg: string, error_code = 1) =
-    stderr.write_line fmt"Error {error_code}".bgWhite.fgRed & fmt": {msg}".fgRed
+    stderr.write_line fmt"Error {error_code}: {msg}".fgRed
     quit(error_code)
 
-proc print_error*(msg: string) =
-    stderr.write_line "Error".bgWhite.fgRed & fmt": {msg}".fgRed
+proc warning*(msg: string) = 
+    stderr.write_line fmt"Warning {msg}".fgYellow
 
 proc check_file*(fname: string): bool =
     if not fileExists(fname):
-        print_error(fmt"{fname} does not exist or is not readable")
+        warning fmt"{fname} does not exist or is not readable"
         return false
     return true
 
@@ -42,6 +45,60 @@ iterator variants*(vcf:VCF, regions: seq[string]): Variant =
         else:
             for v in vcf.query(region): yield v
 
+# Position iterator
+
+type Position* = ref object
+    chrom*: string
+    pos*: int
+
+proc `$`*(p: Position): string =
+    return fmt"<{p.chrom}:{p.pos}>"
+
+iterator iter_pos*(pos_in: string): Position =
+    # Parses a VCF, Bedfile, or single string and outputs
+    # as a position list.
+    var v:VCF
+    var chrom: string
+    var pos: string
+    var bed_offset: int
+
+    if ":" in pos_in and ("/" in pos_in) == false:
+        (chrom, pos) = pos_in.split(":")
+        yield Position(chrom: chrom,
+                       pos: pos.parseInt() - 1)
+    else:
+        var (_, name, ext) = splitFile(pos_in.to_lower())
+        # VCF
+        if ext in ["bcf", "vcf", "vcf.gz"]:
+            doAssert open(v, pos_in)
+            for line in v:
+                yield Position(chrom: $line.CHROM, 
+                            pos: line.POS.int - 1)
+        # Bedfiles
+        elif name.ends_with(".bed") or name.endswith(".bed.gz"):
+            # If bed file, use 0-based coordinates
+            bed_offset =
+                if name.ends_with(".bed") or name.endswith(".bed.gz"):
+                    0
+                else:
+                    1
+    
+        let stream: Stream =
+            if pos_in[^3 .. ^1] == ".gz":
+                newGZFileStream(pos_in)
+            else:
+                newFileStream(pos_in, fmRead)
+
+        var n = 0
+        for line in stream.lines:
+            n += 1
+            #try:
+            (chrom, pos) = line.strip(chars = {'\t', ':', ' '}).split({'\t', ':', ' '})
+            yield Position(chrom: chrom,
+                            pos: pos.parseInt() - bed_offset)
+            #except IndexError:
+            #    warning fmt"""Invalid line: {n} in "{pos_in}"; skipping"""
+            
 #====================#
 # Headers and Output #
 #====================#
