@@ -61,6 +61,12 @@ var p = newParser("sc"):
                     fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.basename, opts.absolute)
     
     #########
+    # FASTA #
+    #########
+
+
+
+    #########
     # FASTQ #
     #########
 
@@ -83,6 +89,8 @@ var p = newParser("sc"):
         help("Removes exact duplicates from FASTQ Files")
         arg("fastq", nargs = 1, help = "Input FASTQ")
         run:
+            if opts.fastq == "STDIN":
+                quit_error "This command cannot be run from stdin"
             fq_dedup.fq_dedup(opts.fastq)
 
     #######

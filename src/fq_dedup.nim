@@ -37,6 +37,7 @@ proc fq_dedup*(fastq: string) =
             newGZFileStream(fastq)
         else:
             newFileStream(fastq, fmRead)
+
     if stream == nil:
         quit_error("Unable to open file: " & fastq, 2)
     
