@@ -11,6 +11,7 @@ import sequtils
 import zip/gzipfiles
 import hts
 import terminal
+import posix
 
 # fasta
 import src/fa_gc
@@ -41,6 +42,11 @@ from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
 const VERSION = "0.0.2"
+
+proc is_stdin_pipe(): bool = 
+    var st : posix.Stat
+    assert posix.fstat(0, st) == 0
+    return (st.st_mode).S_ISFIFO()
 
 proc parse_stdin(s: string, supports = true): string =
     # Flips args with STDIN to "-"
@@ -227,7 +233,7 @@ proc get_params(): seq[string] =
     var input_params = commandLineParams()
     var use_stdin = false
 
-    if isatty(stdin) == false:
+    if is_stdin_pipe():
         # echo bar | ./stdin_stdout
         # echo bar | ./stdin_stdout | cat
         if input_params.find("-") > -1:
