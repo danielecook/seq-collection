@@ -44,12 +44,11 @@ signal(SIG_PIPE, SIG_IGN)
 const VERSION = "0.0.2"
 
 proc is_stdin_pipe(): bool = 
-    echo getFileInfo(stdin)
     var st: posix.Stat
     assert posix.fstat(0, st) == 0
     echo " --> ISFIFO() == ", st.st_mode.S_ISFIFO()
-    #echo " --> ISREG() == ", st.st_mode.S_ISREG()
-    #echo " --> ISCHR == ", st.st_mode.S_ISCHR()
+    echo " --> ISREG() == ", st.st_mode.S_ISREG()
+    echo " --> ISCHR == ", st.st_mode.S_ISCHR()
     return st.st_mode.S_ISFIFO()
 
 proc parse_stdin(s: string, supports = true): string =
