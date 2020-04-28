@@ -17,7 +17,7 @@ proc quit_error*(msg: string, error_code = 1) =
     quit(error_code)
 
 proc warning_msg*(msg: string) = 
-    stderr.write_line fmt"Warning {msg}".fgYellow
+    stderr.write_line fmt"Warning: {msg}".fgYellow
 
 proc check_file*(fname: string): bool =
     if not fileExists(fname):

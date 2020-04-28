@@ -221,15 +221,18 @@ proc get_params(): seq[string] =
     var input_params = commandLineParams()
     var use_stdin = false
 
-    echo getFileInfo(stdin)
     if isatty(stdin) == false:
         # ./stdin_stdout foo
         # ./stdin_stdout foo | cat
         warning_msg "--> Input from terminal"
+        echo getFileInfo(stdin)
+        warning_msg "---"
     else:
         # echo bar | ./stdin_stdout
         # echo bar | ./stdin_stdout | cat
         warning_msg "--> Input from a PIPE/FILE"
+        echo getFileInfo(stdin)
+        warning_msg "---"
         if input_params.find("-") > -1:
             input_params[input_params.find("-")] = "STDIN"
         else:
