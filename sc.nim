@@ -222,7 +222,7 @@ proc get_params(): seq[string] =
     var use_stdin = false
 
     echo getFileInfo(stdin)
-    if isatty(stdin):
+    if isatty(stdin) == false:
         # ./stdin_stdout foo
         # ./stdin_stdout foo | cat
         warning_msg "--> Input from terminal"
