@@ -44,9 +44,11 @@ signal(SIG_PIPE, SIG_IGN)
 const VERSION = "0.0.2"
 
 proc is_stdin_pipe(): bool = 
-    var st : posix.Stat
+    echo getFileInfo(stdin)
+    var st: posix.Stat
     assert posix.fstat(0, st) == 0
-    return (st.st_mode).S_ISFIFO()
+    echo st.st_mode
+    return st.st_mode.S_ISFIFO()
 
 proc parse_stdin(s: string, supports = true): string =
     # Flips args with STDIN to "-"
