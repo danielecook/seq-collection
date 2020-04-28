@@ -46,6 +46,7 @@ const VERSION = "0.0.2"
 proc is_stdin_pipe(): bool = 
     var st: posix.Stat
     assert posix.fstat(0, st) == 0
+    echo " --> isatty() == ", terminal.isatty(stdin)
     echo " --> ISFIFO() == ", st.st_mode.S_ISFIFO()
     echo " --> ISREG() == ", st.st_mode.S_ISREG()
     echo " --> ISCHR == ", st.st_mode.S_ISCHR()
