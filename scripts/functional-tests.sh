@@ -18,10 +18,11 @@ export -f printf_stdin
 
 echo "STDIN"
 cat tests/fastq/dup.fq | ${PARENT_DIR}/sc --debug fq-dedup &
+echo "END"
 
 echo "AS FILE"
-${PARENT_DIR}/sc --debug fq-dedup  tests/fastq/dup.fq
-
+${PARENT_DIR}/sc --debug fq-dedup ${PARENT_DIR}/tests/fastq/dup.fq
+echo "END2"
 
 #======#
 # json #
