@@ -10,23 +10,14 @@ tear_down() {
     rm test.fq.gz
 }
 
+# Dump ENV
+env
+
 #===================#
 # Utility Functions #
 #===================#
 printf_stdin() { local stdin; read -d '' -u 0 stdin; printf "$@" "$stdin"; }
 export -f printf_stdin
-
-echo "PYTHON TEST STDIN"
-echo "G" | python test.py
-
-echo "PYTHON TEST FILE"
-python test.py "G"
-
-echo "STDIN"
-cat tests/fastq/dup.fq | ${PARENT_DIR}/sc --debug fq-dedup
-
-echo "AS FILE"
-${PARENT_DIR}/sc --debug fq-dedup ${PARENT_DIR}/tests/fastq/dup.fq
 
 #======#
 # json #
