@@ -47,6 +47,7 @@ proc is_stdin_pipe(): bool =
     echo getFileInfo(stdin)
     var st: posix.Stat
     assert posix.fstat(0, st) == 0
+    echo st
     echo st.st_mode
     return st.st_mode.S_ISFIFO()
 
