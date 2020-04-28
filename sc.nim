@@ -221,7 +221,7 @@ proc get_params(): seq[string] =
     var input_params = commandLineParams()
     var use_stdin = false
 
-    warning getFileInfo(stdin)
+    echo getFileInfo(stdin)
     if isatty(stdin):
         # ./stdin_stdout foo
         # ./stdin_stdout foo | cat
