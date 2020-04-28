@@ -45,11 +45,11 @@ const VERSION = "0.0.2"
 proc parse_stdin(s: string, supports = true): string =
     # Flips args with STDIN to "-"
     # to get around argparse limitation
-    if supports == false:
-        quit_error("This command does not support stdin")
     if s == "STDIN":
+        if supports == false:
+            quit_error("This command does not support stdin")
         return "-"
-    return s
+    return s.assert_file()
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
@@ -78,7 +78,13 @@ var p = newParser("sc"):
         option("-p", "--pos", help = "VCF, BED, or string position")
         arg("windows", nargs = -1, help = "Window-sizes")
         run:
-            fa_gc.fa_gc(opts.fasta, opts.pos, opts.windows)
+            if opts.pos == "":
+                quit_error "Must provide --pos: (chr:100 / bed / vcf )"
+            if opts.windows.len == 0:
+                quit_error "Must provide a list of windows: (e.g. 100 200 500)"
+            fa_gc.fa_gc(opts.fasta.parse_stdin(),
+                        opts.pos,
+                        opts.windows)
 
 
     #########

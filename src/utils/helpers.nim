@@ -19,6 +19,12 @@ proc quit_error*(msg: string, error_code = 1) =
 proc warning_msg*(msg: string) = 
     stderr.write_line fmt"Warning: {msg}".fgYellow
 
+proc assert_file*(fname: string): string =
+    # Checks that a file exists and throws an error if not
+    if not fileExists(fname) and fname != "STDIN":
+        quit_error fmt"{fname} does not exist or is not readable"
+    return fname
+
 proc check_file*(fname: string): bool =
     if not fileExists(fname):
         warning_msg fmt"{fname} does not exist or is not readable"

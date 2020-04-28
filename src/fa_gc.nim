@@ -71,7 +71,6 @@ proc fa_gc*(fasta: string, positions_in: string, windows_in: seq[string]) =
     windows.sort()
     windows.reverse()
 
-    # Parse positions
     for pos in positions_in.iter_pos():
         spawn calc_window_set(fasta, pos, windows)
     sync()
