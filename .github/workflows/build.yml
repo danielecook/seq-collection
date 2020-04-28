@@ -79,6 +79,7 @@ jobs:
     - name: Functional Tests
       env:
         TERM: "xterm"
+      shell: bash
       run: |
         bash ./scripts/functional-tests.sh
 
