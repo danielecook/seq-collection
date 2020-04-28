@@ -9,16 +9,19 @@ import colorize
 import sequtils
 
 
-proc quit_error*(msg: string, error_code = 1) =
+proc error_msg*(msg: string, error_code = 1) =
     stderr.write_line fmt"Error {error_code}: {msg}".fgRed
+
+proc quit_error*(msg: string, error_code = 1) =
+    error_msg(msg, error_code)
     quit(error_code)
 
-proc warning*(msg: string) = 
+proc warning_msg*(msg: string) = 
     stderr.write_line fmt"Warning {msg}".fgYellow
 
 proc check_file*(fname: string): bool =
     if not fileExists(fname):
-        warning fmt"{fname} does not exist or is not readable"
+        warning_msg fmt"{fname} does not exist or is not readable"
         return false
     return true
 

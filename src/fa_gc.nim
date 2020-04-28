@@ -36,7 +36,7 @@ proc calc_window_set(fasta: string, p: Position, windows: seq[int]) =
     try:
         initial_sequence = f.get(p.chrom, p.pos - max_win_len, p.pos + max_win_len)
     except RangeError:
-        warning fmt"Variant {p} out of range"
+        warning_msg fmt"Variant {p} out of range"
         return
 
     output[0] = initial_sequence.calc_gc()

@@ -42,9 +42,11 @@ signal(SIG_PIPE, SIG_IGN)
 
 const VERSION = "0.0.2"
 
-proc parse_stdin(s: string): string =
+proc parse_stdin(s: string, supports = true): string =
     # Flips args with STDIN to "-"
     # to get around argparse limitation
+    if supports == false:
+        quit_error("This command does not support stdin")
     if s == "STDIN":
         return "-"
     return s
@@ -102,9 +104,7 @@ var p = newParser("sc"):
         help("Removes exact duplicates from FASTQ Files")
         arg("fastq", nargs = 1, help = "Input FASTQ")
         run:
-            if opts.fastq == "STDIN":
-                quit_error "This command cannot be run from stdin"
-            fq_dedup.fq_dedup(opts.fastq)
+            fq_dedup.fq_dedup(opts.fastq.parse_stdin(false))
 
     #######
     # BAM #
@@ -221,13 +221,14 @@ proc get_params(): seq[string] =
     var input_params = commandLineParams()
     var use_stdin = false
 
-    when defined(macosx):
-        use_stdin = getFileInfo(stdin).id.device == 0
-
-    elif defined(linux):
-        use_stdin = terminal.isatty(stdin)
-
-    if use_stdin == true:
+    if isatty(stdin):
+        # ./stdin_stdout foo
+        # ./stdin_stdout foo | cat
+        warning_msg "--> Input from terminal"
+    else:
+        # echo bar | ./stdin_stdout
+        # echo bar | ./stdin_stdout | cat
+        warning_msg "--> Input from a PIPE/FILE"
         if input_params.find("-") > -1:
             input_params[input_params.find("-")] = "STDIN"
         else:
@@ -245,12 +246,12 @@ else:
         p.run(input_params)
     except UsageError as E:
         input_params.add("-h")
-        stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
+        error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
         if input_params.find("--debug") > -1:
             p.run(input_params)
     except Exception as E:
         if commandLineParams().find("--debug") > -1:
-            stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
+            error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
             raise
         else:
             if E.msg != "errno: 32 `Broken pipe`":
