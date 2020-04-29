@@ -172,7 +172,7 @@ var p = newParser("sc"):
         flag("--pass", help="Only output variants where FILTER=PASS")
         flag("--debug", help="Debug")
         run:
-            to_json(parse_stdin(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
+            to_json(opts.vcf.parse_stdin(), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
 
     command("tajima", group="VCF"):
         help("Calculate tajimas D")
@@ -231,14 +231,12 @@ var p = newParser("sc"):
 proc get_params(): seq[string] =
     # Check if input is from pipe
     var input_params = commandLineParams()
+    
     if is_stdin_pipe():
         if input_params.find("-") > -1:
             input_params[input_params.find("-")] = "STDIN"
-        else:
-            input_params.add("STDIN")
-        warning_msg "Input is from stdin"
-    else:
-        warning_msg "Input is from terminal"
+        #else: Disable for now as it causes to may issues
+        #    input_params.add("STDIN")
     
     return input_params
 
