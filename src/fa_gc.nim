@@ -20,36 +20,27 @@ const fa_gc_header* = ["reads",
 proc calc_gc(sequence: string): float =
     return (sequence.count({'G', 'C', 'g', 'c'}) / sequence.count({'A', 'T', 'C', 'G', 'a', 't', 'c', 'g'}))
 
+proc sub_seq(sequence: string, start_pos: int, end_pos: int): string =
+    var left, right: int
+    left = start_pos
+    right = end_pos
+    if left <= 0:
+        left = 0
+    if right >= (sequence.len - 1):
+        right = sequence.len - 1
+    return sequence[left .. right]
+
 proc calc_window_set(fasta: string, p: Position, windows: seq[int]) =
     # An efficient method for calculating window sizes
     # by loading complete sequence into memory and successively
     # trimming
     # Calculate the GC content for largest window first, then
     # subset, calculate, repeat, etc.
-    var f:FAI
-    doAssert open(f, fasta)
     var 
         output = new_seq[float](windows.len)
-        max_win_len = windows[0]
-        initial_sequence: string
-    
-    try:
-        initial_sequence = f.get(p.chrom, p.pos - max_win_len, p.pos + max_win_len)
-    except RangeError:
-        warning_msg fmt"Variant {p} out of range"
-        return
 
-    output[0] = initial_sequence.calc_gc()
-    for k, window in windows[1 ..< windows.len]:
-        # If we are near the beginning or end of a contig, just
-        # fetch from beginning
-        if initial_sequence.len == max_win_len * 2 + 1:
-            let offset = max_win_len - window
-            let sub_seq = initial_sequence[offset .. max_win_len] & initial_sequence[max_win_len + 1 ..< initial_sequence.len - offset]
-            output[k + 1] = sub_seq.calc_gc()
-        else:
-            # If the position lies near the border, query fasta directly
-            output[k + 1] = f.get(p.chrom, p.pos - window, p.pos + window).calc_gc()
+    for k, window in windows:
+        output[k] = fasta.sub_seq(p.pos - window, p.pos + window).calc_gc()
     echo fmt"{p.chrom}:{p.pos} {output}"
 
 
@@ -67,12 +58,22 @@ proc fa_gc*(fasta: string, positions_in: string, windows_in: seq[string]) =
         if windows[i] < 1:
             quit_error "Window lengths must be >= 1"
 
-    # Sort windows from max to min
-    windows.sort()
-    windows.reverse()
-
+    # Load all positions
+    var position_set = new_seq[Position]()
     for pos in positions_in.iter_pos():
-        calc_window_set(fasta, pos, windows)
+        position_set.add(pos)
+    
+    position_set.sort(helpers.genome_cmp)
+
+    var curr_chrom: string
+    var chrom_fasta: string
+    for chr_pos in position_set:
+        # load chromosome
+        if curr_chrom != chr_pos.chrom:
+            warning_msg fmt"Loading chrom {chr_pos.chrom}"
+            chrom_fasta = f.get(chr_pos.chrom)
+            curr_chrom = chr_pos.chrom
+        calc_window_set(chrom_fasta, chr_pos, windows)
     #sync()
 
     # open(b, bamfile, index=true)

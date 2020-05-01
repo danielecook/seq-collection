@@ -5,9 +5,11 @@ import streams
 import zip/gzipfiles
 import strutils
 import strformat
+import sequtils
 import colorize
 import sequtils
-
+import tables
+import nre
 
 proc error_msg*(msg: string, error_code = 1) =
     stderr.write_line fmt"Error {error_code}: {msg}".fgRed
@@ -72,6 +74,7 @@ iterator iter_pos*(pos_in: string): Position =
     var bed_offset: int
 
     if ":" in pos_in and ("/" in pos_in) == false:
+        # Read in string argument
         (chrom, pos) = pos_in.split(":")
         yield Position(chrom: chrom,
                        pos: pos.parseInt() - 1)
@@ -100,8 +103,19 @@ iterator iter_pos*(pos_in: string): Position =
 
         var n = 0
         for line in stream.lines:
+            # TODO: This needs to be cleaned up
             n += 1
-            (chrom, pos) = line.strip(chars = {'\t', ':', ' '}).split({'\t', ':', ' '})
+            var curr_line = line.strip(chars = {'\t', ':', ' '})
+            curr_line = curr_line.strip(chars = {'\t', ':', ' '})
+            try:
+                (chrom, pos) = nre.split(curr_line, re"[\t: ]+")[0..1]
+            except IndexError:
+                # If it is the first line, assume it is a header
+                if n == 1:
+                    continue
+                else:
+                    warning_msg fmt"""Invalid line: {n} in "{pos_in}" > {line}"""
+                    continue
             try:
                 yield Position(chrom: chrom,
                                pos: pos.parseInt() - bed_offset)
@@ -110,8 +124,49 @@ iterator iter_pos*(pos_in: string): Position =
                 if n == 1:
                     continue
                 else:
-                    warning_msg fmt"""Invalid line: {n} in "{pos_in}"; skipping"""
-            
+                    warning_msg fmt"""Invalid line: {n} in "{pos_in}" > {line}"""
+                    continue
+
+proc is_numeric(s: string): bool =
+    return all(s, isDigit)
+
+proc fix_chr(s: string): string = 
+    if s.to_lower().startswith("chr") and s.len > 3:
+        return s[3..s.len-1].to_lower()
+    return s.to_lower()
+
+const CHROM_VALS = {"x": 1, "y": 2, "m": 3}.toTable
+
+proc genome_cmp*(x, y: Position): int =
+    let x_chr = x.chrom.fix_chr()
+    let y_chr = y.chrom.fix_chr()
+    if x_chr.is_numeric() and y_chr.is_numeric():
+        if x_chr == y_chr:
+            if x.pos < y.pos: return -1
+            elif x.pos == y.pos: return 0
+            else: return 1
+        elif x_chr.parseInt() < y_chr.parseInt(): return -1
+        else: return 1
+    elif x_chr.is_numeric() and y_chr.is_numeric() == false:
+        return -1
+    elif x_chr.is_numeric() == false and y_chr.is_numeric():
+        return 1
+    else:
+        # Both are non-numeric
+        if x_chr in CHROM_VALS and y_chr in CHROM_VALS:
+            if CHROM_VALS[x_chr] < CHROM_VALS[y_chr]: return -1
+            elif CHROM_VALS[x_chr] < CHROM_VALS[y_chr]:
+                if x.pos < y.pos: return -1
+                elif x.pos == y.pos: return 0
+                else: return 1
+            else:
+                return 1
+        else:
+            if x_chr < y_chr: return -1
+            elif x_chr == y_chr: return 0
+            else: return 1
+
+
 #====================#
 # Headers and Output #
 #====================#
