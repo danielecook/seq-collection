@@ -101,12 +101,16 @@ iterator iter_pos*(pos_in: string): Position =
         var n = 0
         for line in stream.lines:
             n += 1
-            #try:
             (chrom, pos) = line.strip(chars = {'\t', ':', ' '}).split({'\t', ':', ' '})
-            yield Position(chrom: chrom,
-                            pos: pos.parseInt() - bed_offset)
-            #except IndexError:
-            #    warning fmt"""Invalid line: {n} in "{pos_in}"; skipping"""
+            try:
+                yield Position(chrom: chrom,
+                               pos: pos.parseInt() - bed_offset)
+            except ValueError:
+                # If it is the first line, assume it is a header
+                if n == 1:
+                    continue
+                else:
+                    warning_msg fmt"""Invalid line: {n} in "{pos_in}"; skipping"""
             
 #====================#
 # Headers and Output #

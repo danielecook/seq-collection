@@ -36,8 +36,6 @@ import src/phylo
 
 import src/utils/helpers
 
-# TODO: Test todo
-
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 

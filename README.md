@@ -1,3 +1,5 @@
+![Build](https://github.com/danielecook/seq-collection/workflows/Build/badge.svg)
+
 # seq-collection
 
 A collection of useful sequencing utilities.

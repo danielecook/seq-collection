@@ -10,9 +10,6 @@ tear_down() {
     rm test.fq.gz
 }
 
-# Dump ENV
-env
-
 #===================#
 # Utility Functions #
 #===================#

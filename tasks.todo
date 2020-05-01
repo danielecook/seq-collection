@@ -45,5 +45,7 @@ VCF:
     ☐ VCF Subsample?
     ☐ Tajima's D (Parallelize across chrom?)
 
+    
+
 
 Genome manager (a better one?):

@@ -72,8 +72,8 @@ proc fa_gc*(fasta: string, positions_in: string, windows_in: seq[string]) =
     windows.reverse()
 
     for pos in positions_in.iter_pos():
-        spawn calc_window_set(fasta, pos, windows)
-    sync()
+        calc_window_set(fasta, pos, windows)
+    #sync()
 
     # open(b, bamfile, index=true)
     # var freq_results = newSeq[FlowVar[chrom_freqs]](b.hdr.targets().len)
