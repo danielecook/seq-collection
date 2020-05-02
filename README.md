@@ -74,7 +74,15 @@ The window sizes correspond to the distance upstream and downstream to calculate
 
 Example output:
 
+```
+> sc fa-gc --pos pos.tsv hg19.fa.gz 50 3200 500000
+```
 
+| chrom   |   pos |   gc_100 |   gc_6400 |   gc_1000000 |
+|:--------|------:|---------:|----------:|-------------:|
+| chr1    | 50000 |   0.3663 |  0.373535 |     0.430292 |
+| chr1    | 50020 |   0.3663 |  0.373535 |     0.430288 |
+| chr1    | 50050 |   0.3564 |  0.373067 |     0.430283 |
 
 __Notes__
 
