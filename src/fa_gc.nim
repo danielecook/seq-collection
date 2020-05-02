@@ -8,6 +8,7 @@ import strutils
 import sequtils
 import os
 import hts
+import math
 import threadpool
 
 const fa_gc_header* = ["reads",
@@ -53,7 +54,7 @@ proc calc_window_set(fasta: string, p: Position, windows: seq[int]): result_gc =
         return
 
     for k, window in windows:
-        output[k] = fasta.sub_seq(p.pos0 - window, p.pos0 + window).calc_gc()
+        output[k] = fasta.sub_seq(p.pos0 - window, p.pos0 + window).calc_gc().round(window.intToStr().len + 2)
     
     return result_gc(chr_pos: p, windows: output)
 
