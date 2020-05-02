@@ -62,12 +62,18 @@ type Position* = ref object
     chrom*: string
     pos*: int
 
+proc pos0*(p: Position): int =
+    # Returns the 0-based coordinate
+    # of a position
+    return p.pos - 1
+
 proc `$`*(p: Position): string =
     return fmt"<{p.chrom}:{p.pos}>"
 
 iterator iter_pos*(pos_in: string): Position =
-    # Parses a VCF, Bedfile, or single string and outputs
+    # Parses VCF, BED, or single string and outputs
     # as a position list.
+    # ***Always*** returns 1-based coordinates
     var v:VCF
     var chrom: string
     var pos: string
@@ -77,7 +83,7 @@ iterator iter_pos*(pos_in: string): Position =
         # Read in string argument
         (chrom, pos) = pos_in.split(":")
         yield Position(chrom: chrom,
-                       pos: pos.parseInt() - 1)
+                       pos: pos.parseInt())
     else:
         var (_, name, ext) = splitFile(pos_in.to_lower())
         # VCF
@@ -85,7 +91,9 @@ iterator iter_pos*(pos_in: string): Position =
             doAssert open(v, pos_in)
             for line in v:
                 yield Position(chrom: $line.CHROM, 
-                            pos: line.POS.int - 1)
+                            pos: line.POS.int)
+        
+        # TODO: Bed handling needs to be reworked.
         # Bedfiles
         elif name.ends_with(".bed") or name.endswith(".bed.gz"):
             # If bed file, use 0-based coordinates
@@ -138,6 +146,8 @@ proc fix_chr(s: string): string =
 const CHROM_VALS = {"x": 1, "y": 2, "m": 3}.toTable
 
 proc genome_cmp*(x, y: Position): int =
+    # Sort genomic coordinates
+    # First numericaly and then by X,Y,M
     let x_chr = x.chrom.fix_chr()
     let y_chr = y.chrom.fix_chr()
     if x_chr.is_numeric() and y_chr.is_numeric():
@@ -205,7 +215,7 @@ proc sci_parse_int*(s: string): int =
     # Parses ints with comma delimiters and scientific notation.
     if 'e' in s:
         var scientific_notation = s.split("e", maxsplit = 1)
-        let coeff = scientific_notation[0].parseInt()
+        let coeff = scientific_notation[0].parseFloat()
         let exponent = scientific_notation[1].parseInt()
-        return math.pow(coeff.float * 10.0, exponent.float).int
+        return math.pow(coeff * 10.0, exponent.float).int
     return s.replace(",", "").parseInt()

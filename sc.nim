@@ -79,8 +79,8 @@ var p = newParser("sc"):
     command("fa-gc", group="FASTA"):
         help("Calculate GC content surrouding a location")
         arg("fasta", nargs = 1, help = "Input FASTQ")
-        option("-p", "--pos", help = "VCF, BED, or string position")
-        arg("windows", nargs = -1, help = "Window-sizes")
+        option("-p", "--pos", help = "VCF, BED, or string position (i.e. chr1:8675309)")
+        arg("windows", nargs = -1, help = "sequence length up and downstream (50 --> ~100bp window [see docs])")
         run:
             if opts.pos == "":
                 quit_error "Must provide --pos: (chr:100 / bed / vcf )"
