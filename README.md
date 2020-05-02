@@ -38,6 +38,26 @@ Options:
 
 # Command Documentation
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Usage](#usage)
+- [Development](#development)
+- [Tools](#tools)
+  - [FASTA](#fasta)
+    - [fa-gc](#fa-gc)
+  - [FASTQ](#fastq)
+    - [fq-dedup](#fq-dedup)
+    - [fq-count](#fq-count)
+    - [fq-meta](#fq-meta)
+      - [Assembling an FQ-Database](#assembling-an-fq-database)
+  - [BAM](#bam)
+    - [insert-size](#insert-size)
+  - [VCF](#vcf)
+    - [json (VCF to JSON conversion)](#json-vcf-to-json-conversion)
+  - [Multi](#multi)
+    - [iter](#iter)
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Usage
