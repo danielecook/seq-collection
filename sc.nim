@@ -11,15 +11,22 @@ import sequtils
 import zip/gzipfiles
 import hts
 import terminal
+import posix
 
+# fasta
+import src/fa_gc
+
+# fastq
 import src/fq_meta
 import src/fq_count
 import src/fq_dedup
 
+# bam
 import src/insert_size
 import src/read_count
 import src/contamination
 
+# vcf
 import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
@@ -36,10 +43,19 @@ signal(SIG_PIPE, SIG_IGN)
 
 const VERSION = "0.0.2"
 
-proc get_vcf(vcf: string): string =
-    if vcf == "STDIN":
+proc is_stdin_pipe(): bool = 
+    var st: posix.Stat
+    assert posix.fstat(0, st) == 0
+    return st.st_mode.S_ISFIFO()
+
+proc parse_stdin(s: string, supports = true): string =
+    # Flips args with STDIN to "-"
+    # to get around argparse limitation
+    if s == "STDIN":
+        if supports == false:
+            quit_error("This command does not support stdin")
         return "-"
-    return vcf
+    return s.assert_file()
 
 var p = newParser("sc"):
     flag("--debug", help="Debug")
@@ -58,6 +74,25 @@ var p = newParser("sc"):
                 for fastq in opts.fastq:
                     fq_meta.fq_meta(fastq, parseInt(opts.lines), opts.basename, opts.absolute)
     
+    #########
+    # FASTA #
+    #########
+    var b = newSeq[int](3)
+    command("fa-gc", group="FASTA"):
+        help("Calculate GC content surrouding a location")
+        arg("fasta", nargs = 1, help = "Input FASTQ")
+        option("-p", "--pos", help = "VCF, BED, or string position (i.e. chr1:8675309)")
+        arg("windows", nargs = -1, help = "sequence length up and downstream (50 --> ~100bp window [see docs])")
+        run:
+            if opts.pos == "":
+                quit_error "Must provide --pos: (chr:100 / bed / vcf )"
+            if opts.windows.len == 0:
+                quit_error "Must provide a list of windows: (e.g. 100 200 500)"
+            fa_gc.fa_gc(opts.fasta.parse_stdin(),
+                        opts.pos,
+                        opts.windows)
+
+
     #########
     # FASTQ #
     #########
@@ -81,7 +116,7 @@ var p = newParser("sc"):
         help("Removes exact duplicates from FASTQ Files")
         arg("fastq", nargs = 1, help = "Input FASTQ")
         run:
-            fq_dedup.fq_dedup(opts.fastq)
+            fq_dedup.fq_dedup(opts.fastq.parse_stdin(false))
 
     #######
     # BAM #
@@ -137,7 +172,18 @@ var p = newParser("sc"):
         flag("--pass", help="Only output variants where FILTER=PASS")
         flag("--debug", help="Debug")
         run:
-            to_json(get_vcf(opts.vcf), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
+            to_json(opts.vcf.parse_stdin(), opts.region, opts.samples, opts.info, opts.format, opts.zip, opts.annotation, opts.pretty, opts.array, opts.pass)
+
+    command("tajima", group="VCF"):
+        help("Calculate tajimas D")
+        arg("vcf", nargs = 1, help="Calculate Tajima's D")
+        arg("region", nargs = -1, help="List of regions")
+        option("-w", "--window_size", default = "100000", help = "Window size")
+        option("-s", "--step_size", default = "100000", help = "Step size")
+        option("--sliding", default = "false", help = "Slide window")
+
+        run:
+            tajimas_d.calc_tajima(parse_stdin(opts.vcf), opts.region)
 
     command("tajima", group="VCF"):
         help("Calculate tajimas D")
@@ -172,6 +218,7 @@ var p = newParser("sc"):
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
         arg("region", nargs = -1, help="List of regions")
         run:
+            vcf2phylo(parse_stdin(opts.vcf), opts.region)
             vcf2phylo(get_vcf(opts.vcf), opts.region)
             
 
@@ -193,13 +240,19 @@ var p = newParser("sc"):
                 genome_iter(b, width)
     
 
-# Check if input is from pipe
-var input_params = commandLineParams()
-if terminal.isatty(stdin) == false:
-    if input_params.find("-") > -1:
-       input_params[input_params.find("-")] = "STDIN"
-    else:
-        input_params.add("STDIN")
+proc get_params(): seq[string] =
+    # Check if input is from pipe
+    var input_params = commandLineParams()
+    
+    if is_stdin_pipe():
+        if input_params.find("-") > -1:
+            input_params[input_params.find("-")] = "STDIN"
+        #else: Disable for now as it causes to may issues
+        #    input_params.add("STDIN")
+    
+    return input_params
+
+var input_params = get_params()
 
 if input_params.len <= 1:
     input_params.add("-h")
@@ -209,12 +262,12 @@ else:
         p.run(input_params)
     except UsageError as E:
         input_params.add("-h")
-        stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
+        error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
         if input_params.find("--debug") > -1:
             p.run(input_params)
     except Exception as E:
         if commandLineParams().find("--debug") > -1:
-            stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
+            error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
             raise
         else:
             if E.msg != "errno: 32 `Broken pipe`":

@@ -67,11 +67,13 @@ type
     n_reads, n_accept: int
 
 proc freq_inserts(bamfile: string, contig: string, verbose: bool): chrom_freqs =
-    var b: Bam
-    var n_reads = 0
-    var n_accept = 0
-    var inserts = new_seq[int64](INS_ARR)
-    var overflow: seq[int64]
+    var 
+        b: Bam
+        n_reads = 0
+        n_accept = 0
+        inserts = new_seq[int64](INS_ARR)
+        overflow: seq[int64]
+
     open(b, bamfile, index=true)
     for record in b.query(contig):
         n_reads += 1
