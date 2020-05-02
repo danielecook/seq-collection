@@ -66,6 +66,18 @@ run array_trailing_comma sc json -a "${PARENT_DIR}/tests/vcf/test.vcf.gz" X:1726
 assert_equal , "$(tail -n 3 "${STDOUT_FILE}" | head -n1 | awk '{print substr($0,length,1)}')"
 assert_equal \} "$(tail -n 2 "${STDOUT_FILE}" | head -n1 | awk '{print substr($0,length,1)}')"
 
+#===========#
+#   fa-gc   #
+#===========#
+
+run fa_gc sc fa-gc --pos chr1:1 tests/fasta/test.fasta 1
+assert_equal "$(cut -f 3 "${STDOUT_FILE}" | tail -n 1)" "0.5"
+
+run fa_gc_full sc fa-gc --pos chr1:10 tests/fasta/test.fasta 100000
+assert_equal "$(cut -f 3 "${STDOUT_FILE}" | tail -n 1)" "0.495"
+
+run fa_gc_full sc fa-gc --pos chr3:10 tests/fasta/test.fasta 100000
+assert_equal "$(cut -f 3 "${STDOUT_FILE}" | tail -n 1)" "0.513"
 
 #==========#
 # fq-dedup #

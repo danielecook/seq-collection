@@ -58,19 +58,12 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
 
 #### fa-gc
 
-Use `fa-gc` to calculate the GC content surrounding a given variant.
+Use `fa-gc` to calculate the GC content surrounding a given genomic position.
 
-```
-# sc fa-gc [options] fasta [windows ...]
-
-sc fa-gc --pos positions.tsv hg19.fa 50 100 200
-```
-
-The window sizes correspond to the distance upstream and downstream to calculate GC content for. For example:
+The window sizes correspond to the distance upstream and downstream used to calculate GC content for. For example:
 
 * 50 --> "100bp" window, but a 101bp width is examined.
-* 100 --> "200bp" window, but 201bp width is examined.
-* 200 --> "400bp" window, but a 401bp width is examined.
+
 
 Example output:
 
@@ -87,9 +80,7 @@ Example output:
 __Notes__
 
 * GC content calculations omit `N` bases.
-* 
-
-
+* Output is sorted by chromosome, position.
 
 ### FASTQ
 
