@@ -37,20 +37,8 @@ Options:
   ```
 
 # Command Documentation
-
-__FASTQ__
-* [fq-dedup](#fq-dedup)
-* [fq-meta](#fq-meta)
-
-__BAM__
-
-* [insert-size](#insert-size)
-
-__VCF__
-* [json](#json)
-
-__MULTI__
-* [iter](#iter)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Usage
 
