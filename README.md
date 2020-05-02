@@ -54,7 +54,13 @@ I intend to port some commands over from [VCF-kit](https://github.com/AndersenLa
  
 ## Tools
 
-### fq-dedup
+### FASTA
+
+#### fa_gc
+
+### FASTQ
+
+#### fq-dedup
 
 The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen!
 
@@ -66,7 +72,7 @@ sc fq-dedup myfastq.fq.gz 2> dup.err | gzip > dedupped.fq.gz
 
 fq-dedup can read both `.fq.gz` and `.fq` files. It sends the deduplicated FASTQ to stdout.
 
-#### Output
+__Output__
 
 Once complete, the following is sent to stderr:
 
@@ -86,11 +92,11 @@ __Benchmark__
 0m58.738s
 ```
 
-### fq-count
+#### fq-count
 
 Count the number of reads in a FASTQ and other metrics.
 
-### fq-meta
+#### fq-meta
 
 __Scenario:__ You are given an old dusty hard drive packed with sequence data. Your collaborator says "We have some great sequencing data here, if only someone could analyze it." You peek at the filesystem and discover that FASTQs have been renamed, removing crucial information about how they were generated. Your collaborator, however, recalls certain details about which data was sequenced on which sequencer and he has a list of sequencing barcodes and associated samples that you can match on." If only there was a way to determine the barcodes, sequencer, or other essential metadata for each FASTQ...
 
@@ -119,7 +125,7 @@ sc fq-meta --header > my_fq_database.txt # Use this to output just the variable 
 parallel -j 8 sc fq-meta ::: find . -name '*.fq.gz' >> my_fq_database.txt
 ```
 
-__Example output__``
+__Example output__
 
 | machine | sequencer      | prob_sequencer        | flowcell  | flowcell_description              | run | lane | sequence_id | index1   | index2 | qual_format          | qual_phred | qual_multiple | min_qual | max_qual | n_lines | basename              | absolute_path |
 |---------|----------------|-----------------------|-----------|-----------------------------------|-----|------|-------------|----------|--------|----------------------|------------|---------------|----------|----------|---------|-----------------------|---------------|
@@ -128,24 +134,20 @@ __Example output__``
 | D00209  | HiSeq2000/2500 | high:machine+flowcell | CACDKANXX | High Output (8-lane) v4 flow cell | 258 | 6    |             | CGCAGTT  |        | Sanger;Illumina 1.8+ | Phred+33   | TRUE          | 0        | 37       | 1       | illumina_6.fq         | …             |
 | D00209  | HiSeq2000/2500 | high:machine+flowcell | CACDKANXX | High Output (8-lane) v4 flow cell | 258 | 6    |             | GAGCAAG  |        | Sanger;Illumina 1.8+ | Phred+33   | TRUE          | 0        | 37       | 1       | illumina_7.fq         | …             |
 
-#### Input
+__Input____
 
 `fq-meta` accepts both gzipped FASTQs (`.fq.gz`, `.fastq.gz` ~ inferred from `.gz` extension) and raw text FASTQs.
 
-#### Example Output
-
-##### Columns
-
-
-#### Assembling an FQ-Database
+##### Assembling an FQ-Database
 
 ```
 sc fq-meta --header > fastq_db.tsv # Prints just the header
 sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.gz >> fastq_db.tsv
 ```
 
+### BAM
 
-### insert-size
+#### insert-size
 
 Calculate the insert-size of a bam or a set of bams. Bams are estimated by evaluating up to the 99.5th percentile of read insert-sizes. This gives numbers that are very close to Picard but a lot faster. 
 
@@ -168,7 +170,9 @@ __Output__
 
 Calculate insert-size metrics on a set of bams.
 
-### json (VCF to JSON conversion)
+### VCF
+
+#### json (VCF to JSON conversion)
 
 Convert a VCF to JSON. This is most useful in the context of a web-service, where you can serve variant data for the purposes of visualization, browsing, etc. For an example of what this might look like, see the [elegans variation variant browser](https://elegansvariation.org/data/browser/).
 
@@ -195,7 +199,7 @@ Options:
   -h, --help                 Show this help
 ```
 
-#### Example
+__Example__
 
 ```
 sc json --format=GT --zip --pretty tests/data/test.vcf.gz
@@ -238,7 +242,9 @@ typical output.
 * `SGT` - Outputs genotypes as `0/0`, `0/1`, `1/1`, ...
 * `TGT` - Outputs genotypes as `T/T`, `A/T`, `A/A`, ...
 
-### iter
+### Multi
+
+#### iter
 
 The `iter` command operates on BAM/CRAM and VCF/BCF files, and is used to generate genomic ranges that can be used to process genomic data in chunks. It works well with tools such as `xargs` or [gnu-parallel](https://www.gnu.org/software/parallel/).
 
@@ -278,10 +284,3 @@ parallel --verbose process_chunk ::: test.bam ::: $(sc iter test.bam)
 
 You can also set the `[width]` option to 0 to generate a list of chromosomes.
 
-
-
-### Cross-compilation
-
-```
-nim c --cpu:i386 --os:linux --threads:on --compileOnly sc.nim
-```
