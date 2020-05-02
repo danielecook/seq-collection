@@ -36,6 +36,8 @@ import src/phylo
 
 import src/utils/helpers
 
+# TODO: Test todo
+
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
@@ -183,6 +185,17 @@ var p = newParser("sc"):
         run:
             tajimas_d.calc_tajima(parse_stdin(opts.vcf), opts.region)
 
+    command("tajima", group="VCF"):
+        help("Calculate tajimas D")
+        arg("vcf", nargs = 1, help="Calculate Tajima's D")
+        arg("region", nargs = -1, help="List of regions")
+        option("-w", "--window_size", default = "100000", help = "Window size")
+        option("-s", "--step_size", default = "100000", help = "Step size")
+        option("--sliding", default = "false", help = "Slide window")
+
+        run:
+            tajimas_d.calc_tajima(get_vcf(opts.vcf), opts.region)
+
     command("tsv", group="VCF"):
         help("Convert a VCF to TSV")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -206,6 +219,7 @@ var p = newParser("sc"):
         arg("region", nargs = -1, help="List of regions")
         run:
             vcf2phylo(parse_stdin(opts.vcf), opts.region)
+            vcf2phylo(get_vcf(opts.vcf), opts.region)
             
 
     command("iter", group="MULTI"):

@@ -53,7 +53,6 @@ proc tally_base_record(position: Position, record: Record, offset: int) =
     base_rec.mapping_quality.add record.mapping_quality
     base_rec.strand_count.inc (record.flag().reverse() == false)
 
-
 proc cmd_read_count*(bamfile: string, positions: string) =
     #[
         Calculates insert size
