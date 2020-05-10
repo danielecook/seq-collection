@@ -63,7 +63,6 @@ Options:
 
 # Command Documentation
 
-
 ## Usage
 
 Install using `nim c sc.nim`
