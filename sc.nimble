@@ -9,7 +9,7 @@ license       = "MIT"
 
 requires "colorize", "zip >= 0.2.1"
 
-requires "https://github.com/danielecook/BitVector#b8cc21271c90cca96ed31f5d5383711dc96a8d3f"
+requires "https://github.com/danielecook/BitVector"
 requires "hts >= 0.3.4"
 requires "argparse >= 0.10.0"
 
