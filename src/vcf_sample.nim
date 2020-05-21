@@ -76,5 +76,4 @@ proc sample*(vcf_fname: string, positions_in: string, n_sites: int) =
             last_out = idx
     sync()
     flush(wtr, rand_sites[last_out..<n_sites])
-    echo "RANGE>>> ", last_out..<n_sites
     close(wtr)
