@@ -33,6 +33,7 @@ import src/vcf2json
 import src/tajimas_d
 import src/genome_iter
 import src/phylo
+import src/vcf_sample
 
 import src/utils/helpers
 
@@ -184,6 +185,16 @@ var p = newParser("sc"):
 
         run:
             tajimas_d.calc_tajima(parse_stdin(opts.vcf), opts.region)
+
+    command("sample", group="VCF"):
+        help("Randomly sample a VCF")
+        arg("vcf", nargs = 1, help="Variant file")
+        option("--bed", help="A set of bed regions to restrict sampling to")
+        option("-n", "--sites", default = "10", help="Number of sites to sample")
+
+        run:
+            vcf_sample.sample(opts.vcf, opts.bed, opts.sites.parseInt())
+
 
     command("tsv", group="VCF"):
         help("Convert a VCF to TSV")

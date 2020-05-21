@@ -12,6 +12,8 @@ var logger = newConsoleLogger()
 addHandler(logger)
 setLogFilter(lvlInfo)
 
+## https://github.com/DecodeGenetics/read_haps
+
 # Initialize a deque object
 # for adjacent positions
 type Position = ref object
