@@ -10,7 +10,7 @@ license       = "MIT"
 requires "colorize", "zip >= 0.2.1"
 
 requires "https://github.com/danielecook/BitVector"
-requires "hts >= 0.3.4"
+requires "hts >= 0.3.6"
 requires "argparse >= 0.10.0"
 
 bin = @["sc"]
