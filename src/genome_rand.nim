@@ -79,7 +79,7 @@ proc rand_region(g: genome): Region =
 
 proc rand_pos(g: genome, region: Region): int =
     let r = g.chrom_table[$region]
-    return random(r.stop) + r.start
+    return random(r.len) + r.start
 
 
 iterator random_site(g: genome, n: int, one: int): site = 
@@ -102,4 +102,7 @@ proc get_genome(f: Fai, bed: string): genome =
 proc genome_rand*(f: Fai, n_sites: int, bed: string, one: int) =
     var genome_ref = f.get_genome(bed)
     for i in genome_ref.random_site(n_sites, one):
-        echo i
+        if i.pos > 0:
+            echo i, "\t", f.get(i.chrom, i.pos, i.pos)
+        else:
+            echo i, "\t", f.get(i.chrom, i.pos, i.pos+1)[0]
