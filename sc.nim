@@ -247,12 +247,19 @@ var p = newParser("sc"):
                 genome_iter(b, width)
 
     command("rand", group="MULTI"):
-        help("Generate random genomic locations")
+        help("Generate random genomic positions and ranges")
         arg("input", nargs = 1, help = "Input FASTA, BAM, or VCF or BAM")
         option("-n", "--sites", default = "10", help = "Number of sites")
         option("-b", "--bed", help = "BED (0-based) of regions to restrict to")
         option("-s", "--seq", help = "Output additional information")
+        flag("-1", "--one", help = "Output 1-based coordinates")
         run:
+            let one = if opts.one: 1 else: 0
+            let fname = opts.input.toLower()
+            if fname.is_fasta():
+                var fasta:Fai
+                doAssert open(fasta, opts.input)
+                genome_rand(fasta, opts.sites.parseInt(), opts.bed, one)
             # var width = helpers.sci_parse_int(opts.width)
             # if width < 0:
             #     quit_error("Width must be greater than 0")
@@ -261,9 +268,6 @@ var p = newParser("sc"):
             #     doAssert open(v, opts.input)
             #     genome_rand(v)
             # elif opts.input.endswith(".fa") or opts.input.endswith(".fa.gz"):
-            var fasta:Fai
-            doAssert open(fasta, opts.input)
-            genome_rand(fasta, opts.sites.parseInt(), opts.bed)
             # else:
             #     var b:BAM
             #     doAssert open(b, opts.input)
