@@ -1,6 +1,5 @@
 import streams
 import zip/gzipfiles
-import sequtils
 import strutils
 import strformat
 

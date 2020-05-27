@@ -27,7 +27,7 @@ import src/read_count
 import src/contamination
 
 # vcf
-import src/vcf2fasta
+#import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
 import src/tajimas_d
@@ -135,7 +135,7 @@ var p = newParser("sc"):
 
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
-        option("-d", "--dist", default="", help = "Output raw distribution(s)")
+        option("-d", "--dist", default="0", help = "Output raw distribution(s)")
         arg("bam", nargs = -1, help = "Input BAM")
         flag("-t", "--header", help="Output the header")
         flag("-b", "--basename", help="Add basename column")
@@ -251,7 +251,8 @@ var p = newParser("sc"):
         arg("input", nargs = 1, help = "Input FASTA, BAM, or VCF or BAM")
         option("-n", "--sites", default = "10", help = "Number of sites")
         option("-b", "--bed", help = "BED (0-based) of regions to restrict to")
-        option("-s", "--seq", help = "Output additional information")
+        option("-d", "--dist", default="0", help = "Output regions following a distribution ex: N(1,5) [see docs]")
+        option("-p", "--pattern", default="", help = "A regular expression to use for chromosomes to keep")
         flag("-1", "--one", help = "Output 1-based coordinates")
         run:
             let one = if opts.one: 1 else: 0
@@ -259,7 +260,7 @@ var p = newParser("sc"):
             if fname.is_fasta():
                 var fasta:Fai
                 doAssert open(fasta, opts.input)
-                genome_rand(fasta, opts.sites.parseInt(), opts.bed, one)
+                genome_rand(fasta, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
             # var width = helpers.sci_parse_int(opts.width)
             # if width < 0:
             #     quit_error("Width must be greater than 0")

@@ -1,6 +1,5 @@
 import hts
 import json
-import sequtils
 import strutils
 import strformat
 import utils/helpers
