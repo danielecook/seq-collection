@@ -261,7 +261,7 @@ var p = newParser("sc"):
                 var fasta:Fai
                 doAssert open(fasta, opts.input)
                 genome_rand(fasta, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
-            # var width = helpers.sci_parse_int(opts.width)
+            ## var width = helpers.sci_parse_int(opts.width)
             # if width < 0:
             #     quit_error("Width must be greater than 0")
             # if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):

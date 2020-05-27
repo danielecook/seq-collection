@@ -1,4 +1,3 @@
-import memfiles
 import streams
 import zip/gzipfiles
 import utils/helpers

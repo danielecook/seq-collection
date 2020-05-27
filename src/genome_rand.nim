@@ -1,5 +1,4 @@
 # Generates a random site
-import strformat
 import nre except toSeq
 import hts
 import math
@@ -8,10 +7,8 @@ import alea
 import tables
 import random
 import sequtils
-import strformat
 import strutils
 import algorithm
-import parseutils
 import utils/bed
 
 randomize()
@@ -87,14 +84,7 @@ proc rand_region(g: genome): Region =
 
 proc rand_pos(g: genome, region: Region): int =
     let r = g.chrom_table[$region]
-    return random(r.len) + r.start
-
-template toClosure*(i): auto =
-  ## Wrap an inline iterator in a first-class closure iterator.
-  iterator j: type(i) {.closure.} =
-    for x in i:
-      yield x
-  j
+    return rand(r.len) + r.start
 
 proc range_iter(range_spec: string): iterator:int = 
     #[Parses range specification
@@ -161,14 +151,14 @@ iterator random_site(g: genome, n: int, rng_iterator: iterator, one: int): site 
                    stop: stop,
                    one: one)
 
-proc get_genome(f: Fai, bed: string, pattern: string): genome =
-    var result = genome()
+proc get_genome[T: Fai | BAM | VCF](f: T, bed: string, pattern: string): genome =
+    var g = genome()
     let chrom_table = f.gen_chrom_table(bed, pattern)
-    result.chrom_table = chrom_table
-    result.cum_length = chrom_table.cum_length()
-    result.chrom_weights = chrom_table.chrom_weights()
-    result.chrom_bins = chrom_table.chrom_bins()
-    return result
+    g.chrom_table = chrom_table
+    g.cum_length = chrom_table.cum_length()
+    g.chrom_weights = chrom_table.chrom_weights()
+    g.chrom_bins = chrom_table.chrom_bins()
+    return g
 
 proc genome_rand*(f: Fai, n_sites: int, bed: string, range_s: string, pattern: string, one: int) =
     var genome_ref = f.get_genome(bed, pattern)

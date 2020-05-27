@@ -37,5 +37,5 @@ iterator iter_bed*(bedfile: string): Region =
         else:
             newFileStream(bedfile, fmRead)
     
-    for line in bedfile.lines:
+    for line in stream.lines:
         yield line.bed_line_to_region()
