@@ -11,6 +11,18 @@ import sequtils
 import tables
 import nre
 
+proc ending*(s: string, endings: seq[string]): bool = 
+    for i in endings:
+        if s.endswith(i):
+            return true
+    return false
+
+proc is_fasta*(s: string): bool = 
+    return s.toLower().ending(@[".fa.gz", ".fa", ".fasta", ".fasta.gz"])
+
+proc is_vcf*(s: string): bool = 
+    return s.toLower().ending(@[".vcf", ".vcf.gz", ".bcf"])
+
 proc error_msg*(msg: string, error_code = 1) =
     stderr.write_line fmt"Error {error_code}: {msg}".fgRed
 

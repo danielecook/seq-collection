@@ -6,6 +6,24 @@ import strformat
 import hts
 
 
+proc genome_iter*(f: Fai, l: int) =
+    if l == 0:
+        for i in 0..<f.len:
+            echo f[i]
+    else:
+        var pos = 1
+        for i in 0..<f.len:
+            var contig_len = f.chrom_len(f[i])
+            var contig_name = f[i]
+            while pos < contig_len:
+                if pos+l-1 > contig_len:
+                    echo fmt"{contig_name}:{pos}-{contig_len}"
+                else:
+                    echo fmt"{contig_name}:{pos}-{pos+l-1}"
+                pos += l
+            pos = 1
+
+
 proc genome_iter*(vcf: VCF, l: int) =
     if l == 0:
         for contig in vcf.contigs:

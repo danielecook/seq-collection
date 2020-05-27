@@ -41,6 +41,10 @@ proc gen_chrom_table(f: Fai, bed: string): Table[string, Region] =
                                   start: 0,
                                   stop: f.chrom_len(f[i]))
 
+#==================#
+#   genome table   #
+#==================#
+
 proc cum_length(chr_tbl: Table[string, Region]): int =
     # Calculate the cumulative length of all chromosomes/regions
     return toSeq(chr_tbl.values()).mapIt( it.len ).foldl( a + b )

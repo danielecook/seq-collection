@@ -85,7 +85,7 @@ var p = newParser("sc"):
     command("fa-gc", group="FASTA"):
         help("Calculate GC content surrouding a location")
         arg("fasta", nargs = 1, help = "Input FASTQ")
-        option("-p", "--pos", help = "VCF, BED, or string position (i.e. chr1:8675309)")
+        option("-p", "--pos", help = "VCF, BED, or string position (e.g. chr1:8675309)")
         arg("windows", nargs = -1, help = "sequence length up and downstream (50 --> ~100bp window [see docs])")
         run:
             if opts.pos == "":
@@ -225,14 +225,19 @@ var p = newParser("sc"):
             
 
     command("iter", group="MULTI"):
-        help("Generate genomic ranges for iteration from a BAM or VCF for parallel execution")
+        help("Generate genomic ranges for iteration from a FASTA, BAM, or VCF for parallel execution")
         arg("input", nargs = 1, help = "Input VCF or BAM")
         arg("width", default="10000", nargs = 1, help = "bp length; Set to 0 to list chromosomes")
         run:
+            let fname = opts.input.toLower()
             var width = helpers.sci_parse_int(opts.width)
             if width < 0:
                 quit_error("Width must be greater than 0")
-            if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
+            if fname.is_fasta():
+                var f:Fai
+                doAssert open(f, opts.input)
+                genome_iter(f, width)
+            elif fname.is_vcf():
                 var v:VCF
                 doAssert open(v, opts.input)
                 genome_iter(v, width)
@@ -243,7 +248,10 @@ var p = newParser("sc"):
 
     command("rand", group="MULTI"):
         help("Generate random genomic locations")
-        arg("input", nargs = 1, help = "Input FASTA, BAM, or VCFVCF or BAM")
+        arg("input", nargs = 1, help = "Input FASTA, BAM, or VCF or BAM")
+        option("-n", "--sites", default = "10", help = "Number of sites")
+        option("-b", "--bed", help = "BED (0-based) of regions to restrict to")
+        option("-s", "--seq", help = "Output additional information")
         run:
             # var width = helpers.sci_parse_int(opts.width)
             # if width < 0:
@@ -255,7 +263,7 @@ var p = newParser("sc"):
             # elif opts.input.endswith(".fa") or opts.input.endswith(".fa.gz"):
             var fasta:Fai
             doAssert open(fasta, opts.input)
-            genome_rand(fasta)
+            genome_rand(fasta, opts.sites.parseInt(), opts.bed)
             # else:
             #     var b:BAM
             #     doAssert open(b, opts.input)
