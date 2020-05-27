@@ -14,3 +14,4 @@ benchmarks/*
 illumina_instrument.py
 .envrc
 vcf2phylip/*
+docs/book/*
