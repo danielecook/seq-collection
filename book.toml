@@ -1,0 +1,6 @@
+[book]
+authors = ["Daniel E. Cook"]
+language = "en"
+multilingual = false
+src = "src"
+title = "seq-collection"
