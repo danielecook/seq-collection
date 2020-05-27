@@ -13,3 +13,6 @@
 - [VCF](./vcf.md)
   - [Sample](./vcf/sample.md)
   - [JSON](./vcf/json.md)
+- [MULTI](./multi.md)
+  - [iter](./multi/iter.md)]
+  - [rand](./multi/rand.md)
