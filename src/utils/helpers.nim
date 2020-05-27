@@ -20,6 +20,9 @@ proc ending*(s: string, endings: seq[string]): bool =
 proc is_fasta*(s: string): bool = 
     return s.toLower().ending(@[".fa.gz", ".fa", ".fasta", ".fasta.gz"])
 
+proc is_bam*(s: string): bool = 
+    return s.toLower().ending(@[".sam", ".bam", ".cram"])
+
 proc is_vcf*(s: string): bool = 
     return s.toLower().ending(@[".vcf", ".vcf.gz", ".bcf"])
 

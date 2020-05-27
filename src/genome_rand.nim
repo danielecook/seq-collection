@@ -37,9 +37,18 @@ proc gen_chrom_table(f: Fai, bed: string): Table[string, Region] =
             result[$region] = region
     else:
         for i in 0..<f.len:
-            result[f[i]] = Region(chrom: f[i],
+            var reg = Region(chrom: f[i],
                                   start: 0,
                                   stop: f.chrom_len(f[i]))
+            result[$reg] = reg
+
+#=========#
+#   BAM   #
+#=========#
+
+#=========#
+#   VCF   #
+#=========#
 
 #==================#
 #   genome table   #
@@ -71,13 +80,6 @@ proc rand_pos(g: genome, region: Region): int =
     let r = g.chrom_table[$region]
     return random(r.stop) + r.start
 
-#=========#
-#   BAM   #
-#=========#
-
-#=========#
-#   VCF   #
-#=========#
 
 iterator random_site(g: genome, n: int): site = 
     for i in 0..<n:
