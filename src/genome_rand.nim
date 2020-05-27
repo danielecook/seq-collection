@@ -21,9 +21,10 @@ type
     site = ref object
         chrom: string
         pos: int
+        one: int
   
 proc `$`(s: site): string =
-    return fmt"{s.chrom}:{s.pos}"
+    return fmt"{s.chrom}:{s.pos+s.one}"
 
 #=========#
 #   FAI   #
@@ -81,12 +82,13 @@ proc rand_pos(g: genome, region: Region): int =
     return random(r.stop) + r.start
 
 
-iterator random_site(g: genome, n: int): site = 
+iterator random_site(g: genome, n: int, one: int): site = 
     for i in 0..<n:
         var region = g.rand_region()
         let pos = rand_pos(g, region)
         yield site(chrom: region.chrom,
-                   pos: pos)
+                   pos: pos,
+                   one: one)
 
 proc get_genome(f: Fai, bed: string): genome =
     var result = genome()
@@ -97,7 +99,7 @@ proc get_genome(f: Fai, bed: string): genome =
     result.chrom_bins = chrom_table.chrom_bins()
     return result
 
-proc genome_rand*(f: Fai, n_sites: int, bed: string) =
+proc genome_rand*(f: Fai, n_sites: int, bed: string, one: int) =
     var genome_ref = f.get_genome(bed)
-    for i in genome_ref.random_site(n_sites):
+    for i in genome_ref.random_site(n_sites, one):
         echo i
