@@ -48,7 +48,7 @@ proc sample*(vcf_fname: string, positions_in: string, n_sites: int) =
     doAssert open(vcf, vcf_fname)
     var cum_length = sum(vcf.contigs.mapIt( it.length )).float
     var chrom_name = vcf.contigs.mapIt( it.name )
-    var chrom_len = vcf.contigs.mapIt( it.length )
+
     
     # Weight chromosomes by length
     var chrom_weights = vcf.contigs.mapIt( it.length.float / cum_length )

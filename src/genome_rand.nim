@@ -6,20 +6,22 @@ import random
 import sequtils
 import strformat
 import algorithm
+import parseutils
+import utils/bed
 
 randomize()
 
 type
-  genome_util = ref object
-    chrom_table: Table[string, int]
-    cum_length: int
-    chrom_weights: seq[float]
-    chrom_bins: seq[float]
-
-  site = ref object
-    chrom: string
-    pos: int
-
+    genome = ref object
+        chrom_table: Table[string, Region]
+        cum_length: int
+        chrom_weights: seq[float]
+        chrom_bins: seq[float]
+  
+    site = ref object
+        chrom: string
+        pos: int
+  
 proc `$`(s: site): string =
     return fmt"{s.chrom}:{s.pos}"
 
@@ -27,36 +29,43 @@ proc `$`(s: site): string =
 #   FAI   #
 #=========#
 
-proc gen_chrom_table(f: Fai): Table[string, int] =
+proc gen_chrom_table(f: Fai, bed: string): Table[string, Region] =
     # Generate a table of chrom -> chrom_len
-    for i in 0..<f.len:
-        result[f[i]] = f.chrom_len(f[i])
+    # For bed files this is the sum of regions on that chrom
+    if bed != "":
+        for region in bed.iter_bed():
+            result[$region] = region
+    else:
+        for i in 0..<f.len:
+            result[f[i]] = Region(chrom: f[i],
+                                  start: 0,
+                                  stop: f.chrom_len(f[i]))
 
-proc cum_length(f: Fai): int =
-    # Calculate the cumulative length of all chromosomes
-    result = 0
-    for i in 0..<f.len:
-        result += f.chrom_len(f[i])
+proc cum_length(chr_tbl: Table[string, Region]): int =
+    # Calculate the cumulative length of all chromosomes/regions
+    return toSeq(chr_tbl.values()).mapIt( it.len ).foldl( a + b )
 
-proc chrom_weights(f: Fai): seq[float] =
-    # Calculate weight of each chromosome
-    return toSeq(0..<f.len).mapIt( f.chrom_len(f[it]) / f.cum_length() )
+proc chrom_weights(chr_tbl: Table[string, Region]): seq[float] =
+    # Calculate weight of each chromosome/region
+    let cum_length = chr_tbl.cum_length()
+    return toSeq(chr_tbl.values()).mapIt( it.len / cum_length )
 
-proc chrom_bins(f: Fai): seq[float] =
+proc chrom_bins(chr_tbl: Table[string, Region]): seq[float] =
     # Generate a sequence of bins based on chrom lengths
-    var chrom_weights = f.chrom_weights()
+    var chrom_weights = chr_tbl.chrom_weights()
     var prob_bins = new_seq[float](chrom_weights.len)
     prob_bins[0] = chrom_weights[0]
     for i in 1..chrom_weights.len - 1:
         prob_bins[i] = prob_bins[i-1] + chrom_weights[i]
     return prob_bins
 
-proc rand_chrom(g: genome_util): string = 
-    var chrom_select = g.chrom_bins.lowerBound(rand(1.0))
-    return toSeq(g.chrom_table.keys)[chrom_select]
+proc rand_region(g: genome): Region = 
+    let region_select = g.chrom_bins.lowerBound(rand(1.0))
+    return toSeq(g.chrom_table.values)[region_select]
 
-proc rand_pos(g: genome_util, chrom: string): int =
-    return random(g.chrom_table[chrom])
+proc rand_pos(g: genome, region: Region): int =
+    let r = g.chrom_table[$region]
+    return random(r.stop) + r.start
 
 #=========#
 #   BAM   #
@@ -66,25 +75,23 @@ proc rand_pos(g: genome_util, chrom: string): int =
 #   VCF   #
 #=========#
 
-iterator random_site(g: genome_util, n: int): site = 
+iterator random_site(g: genome, n: int): site = 
     for i in 0..<n:
-        var chrom = g.rand_chrom()
-        let pos = rand_pos(g, chrom)
-        yield site(chrom: chrom,
-                pos: pos)
+        var region = g.rand_region()
+        let pos = rand_pos(g, region)
+        yield site(chrom: region.chrom,
+                   pos: pos)
 
-
-proc get_genome_util(f: Fai): genome_util =
-    var result = genome_util()
-    result.chrom_table = f.gen_chrom_table()
-    result.cum_length = f.cum_length()
-    result.chrom_weights = f.chrom_weights()
-    result.chrom_bins = f.chrom_bins()
+proc get_genome(f: Fai, bed: string): genome =
+    var result = genome()
+    let chrom_table = f.gen_chrom_table(bed)
+    result.chrom_table = chrom_table
+    result.cum_length = chrom_table.cum_length()
+    result.chrom_weights = chrom_table.chrom_weights()
+    result.chrom_bins = chrom_table.chrom_bins()
     return result
 
-
-proc genome_rand*(f: Fai) =
-    var genome_ref = f.get_genome_util()
-    for i in genome_ref.random_site(100):
+proc genome_rand*(f: Fai, n_sites: int, bed: string) =
+    var genome_ref = f.get_genome(bed)
+    for i in genome_ref.random_site(n_sites):
         echo i
-

@@ -91,7 +91,7 @@ iterator iter_pos*(pos_in: string): Position =
             doAssert open(v, pos_in)
             for line in v:
                 yield Position(chrom: $line.CHROM, 
-                            pos: line.POS.int)
+                               pos: line.POS.int)
         
         # TODO: Bed handling needs to be reworked.
         # Bedfiles
@@ -134,6 +134,7 @@ iterator iter_pos*(pos_in: string): Position =
                 else:
                     warning_msg fmt"""Invalid line: {n} in "{pos_in}" > {line}"""
                     continue
+
 
 proc is_numeric(s: string): bool =
     return all(s, isDigit)
