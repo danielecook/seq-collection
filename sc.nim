@@ -31,9 +31,12 @@ import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
 import src/tajimas_d
-import src/genome_iter
 import src/phylo
 import src/vcf_sample
+
+# multi
+import src/genome_iter
+import src/genome_rand
 
 import src/utils/helpers
 
@@ -237,6 +240,26 @@ var p = newParser("sc"):
                 var b:BAM
                 doAssert open(b, opts.input)
                 genome_iter(b, width)
+
+    command("rand", group="MULTI"):
+        help("Generate random genomic locations")
+        arg("input", nargs = 1, help = "Input FASTA, BAM, or VCFVCF or BAM")
+        run:
+            # var width = helpers.sci_parse_int(opts.width)
+            # if width < 0:
+            #     quit_error("Width must be greater than 0")
+            # if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
+            #     var v:VCF
+            #     doAssert open(v, opts.input)
+            #     genome_rand(v)
+            # elif opts.input.endswith(".fa") or opts.input.endswith(".fa.gz"):
+            var fasta:Fai
+            doAssert open(fasta, opts.input)
+            genome_rand(fasta)
+            # else:
+            #     var b:BAM
+            #     doAssert open(b, opts.input)
+            #     genome_rand(b)
     
 
 proc get_params(): seq[string] =
