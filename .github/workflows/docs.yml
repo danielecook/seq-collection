@@ -1,21 +1,17 @@
 name: docs
 on: ["push"]
 
+
 jobs:
-  deploy:
-    runs-on: ubuntu-18.04
+  build:
+    name: Deploy docs
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout master
+        uses: actions/checkout@v1
 
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: '0.3.7'
-
-      - run: cd docs && mdbook build
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/book
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_DOMAIN: danielecook.com/seq-collection

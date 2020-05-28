@@ -1,0 +1,22 @@
+site_name: seq-collection
+theme: readthedocs
+repo_url: https://github.com/danielecook/seq-collection
+
+
+markdown_extensions:
+    - admonition
+    - toc:
+            permalink: true
+            separator: _
+    - fenced_code
+    - sane_lists
+
+nav:
+    - Home: index.md
+    - FASTA:
+        - fa-gc: fa-gc.md
+    - BAM:
+        - insert-size: insert-size.md
+        - read-count: read-count.md
+    - VCF:
+        - json: json.md
