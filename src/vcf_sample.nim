@@ -22,19 +22,18 @@ iterator iter_variants(v: VCF, g: genome, var_type: string, n_sites: int): Varia
         for r in g.random_site(n = 0, rng_dist):
             output = false
             for variant in v.query(r.region):
-                if bloom.lookup($variant) == false:
-                    output = 
-                        (var_type == "all") or
-                        (var_type == "snps" and variant.is_snp()) or
-                        (var_type == "mnps" and variant.is_mnp()) or
-                        (var_type == "indels" and variant.is_indel())
-                    
-                    if output == true:
-                        i += 1
-                        bloom.insert($variant)
-                        yield variant
-                    if i >= n_sites:
-                        break site_iter
+                output = 
+                    (var_type == "all") or
+                    (var_type == "snps" and variant.is_snp()) or
+                    (var_type == "mnps" and variant.is_mnp()) or
+                    (var_type == "indels" and variant.is_indel())
+                
+                if output and bloom.lookup($variant) == false:
+                    i += 1
+                    bloom.insert($variant)
+                    yield variant
+                if i >= n_sites:
+                    break site_iter
 
 proc sample*(vcf_fname: string, positions_in: string, var_type: string, n_sites: int) =
     #[

@@ -241,10 +241,19 @@ proc sci_parse_int*(s: string): int =
 #=========#
 
 proc is_snp*(rec: Variant): bool = 
-    return rec.REF.len == 1 and rec.REF.len == rec.ALT.len
+    for i in @[rec.REF].concat(rec.ALT):
+        if i.len != 1:
+            return false
+    return true
 
 proc is_mnp*(rec: Variant): bool = 
-    return rec.REF.len > 1 and rec.REF.len == rec.ALT.len
+    for i in rec.ALT:
+        if rec.REF.len != i.len:
+            return false
+    return true
 
 proc is_indel*(rec: Variant): bool = 
-    return rec.REF.len != rec.ALT.len
+    for i in rec.ALT:
+        if rec.REF.len == i.len:
+            return false
+    return true
