@@ -5,6 +5,7 @@ repo_url: https://github.com/danielecook/seq-collection
 
 markdown_extensions:
     - admonition
+    - smarty
     - toc:
             permalink: true
             separator: _
@@ -20,3 +21,6 @@ nav:
         - read-count: read-count.md
     - VCF:
         - json: json.md
+
+extra_css:
+    - styles.css
