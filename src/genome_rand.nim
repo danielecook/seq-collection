@@ -30,6 +30,17 @@ proc `$`(s: site): string =
     return @[s.chrom, $(s.start + s.one), $(s.stop + s.one)].join("\t")
 
 #=========#
+#   BED   #
+#=========#
+
+# proc gen_chrom_table(f: Bed, pattern: string): Table[string, Region] =
+#     if bed != "":
+#         for region in bed.iter_bed():
+#             if is_some(match(region.chrom, re(pattern))):
+#                 result[$region] = region
+
+
+#=========#
 #   FAI   #
 #=========#
 
@@ -51,6 +62,22 @@ proc gen_chrom_table(f: Fai, bed: string, pattern: string): Table[string, Region
 #=========#
 #   BAM   #
 #=========#
+
+proc gen_chrom_table(bam: BAM, bed: string, pattern: string): Table[string, Region] =
+    # Generate a table of chrom -> chrom_len
+    # For bed files this is the sum of regions on that chrom
+    if bed != "":
+        for region in bed.iter_bed():
+            if pattern == "" or is_some(match(region.chrom, re(pattern))):
+                result[$region] = region
+    else:
+        for contig in bam.hdr.targets:
+            if pattern == "" or is_some(match(contig.name, re(pattern))):
+                var reg = Region(chrom: contig.name,
+                                start: 0,
+                                stop: contig.length.int)
+                result[$reg] = reg
+
 
 #=========#
 #   VCF   #
@@ -167,3 +194,8 @@ proc genome_rand*(f: Fai, n_sites: int, bed: string, range_s: string, pattern: s
             echo i, "\t", f.get(i.chrom, i.start, i.stop)
         else:
             echo i, "\t", f.get(i.chrom, i.start, i.stop)[0]
+
+proc genome_rand*(b: Bam, n_sites: int, bed: string, range_s: string, pattern: string, one: int) =
+    var genome_ref = b.get_genome(bed, pattern)
+    for i in genome_ref.random_site(n_sites, range_iter(range_s), one):
+        echo i

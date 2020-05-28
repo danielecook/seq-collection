@@ -261,13 +261,10 @@ var p = newParser("sc"):
                 var fasta:Fai
                 doAssert open(fasta, opts.input)
                 genome_rand(fasta, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
-            ## var width = helpers.sci_parse_int(opts.width)
-            # if width < 0:
-            #     quit_error("Width must be greater than 0")
-            # if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
-            #     var v:VCF
-            #     doAssert open(v, opts.input)
-            #     genome_rand(v)
+            elif fname.is_bam():
+                var bam:BAM
+                doAssert open(bam, opts.input)
+                genome_rand(bam, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
             # elif opts.input.endswith(".fa") or opts.input.endswith(".fa.gz"):
             # else:
             #     var b:BAM
