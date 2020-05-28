@@ -3,6 +3,7 @@ import tables
 import sequtils
 import strutils
 import strformat
+import utils/helpers
 import algorithm
 import sequtils
 import math
@@ -26,11 +27,7 @@ const AMB = {".": '.', "*":'-', "A":'A', "C":'C', "G":'G',"N":'N',"T":'T',
              "AGNT":'d',"CGNT":'b',"*ACGN":'v',"*ACGT":'N',"*ACNT":'h',"*AGNT":'d',
              "*CGNT":'b',"*ACGNT":'N'}.toTable
 
-proc is_snp(rec: Variant): bool = 
-    for i in @[rec.REF].concat(rec.ALT):
-        if i.len != 1:
-            return false
-    return true
+
 
 proc missing_to_n(x: char): char = 
     if x == '.':

@@ -235,3 +235,16 @@ proc sci_parse_int*(s: string): int =
         let exponent = scientific_notation[1].parseInt()
         return math.pow(coeff * 10.0, exponent.float).int
     return s.replace(",", "").parseInt()
+
+#=========#
+#   VCF   #
+#=========#
+
+proc is_snp*(rec: Variant): bool = 
+    return rec.REF.len == 1 and rec.REF.len == rec.ALT.len
+
+proc is_mnp*(rec: Variant): bool = 
+    return rec.REF.len > 1 and rec.REF.len == rec.ALT.len
+
+proc is_indel*(rec: Variant): bool = 
+    return rec.REF.len != rec.ALT.len

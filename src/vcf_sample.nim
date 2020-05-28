@@ -5,65 +5,65 @@ import sequtils
 import os
 import hts
 import math
-import threadpool
 import random
 import algorithm
+import genome_rand
+import utils/helpers
 
 randomize()
 
-const fa_gc_header* = ["reads",
-                       "gc_content",
-                       "gc_bases",
-                       "n_bases",
-                       "bases",
-                       "basename",
-                       "absolute_path"].join("\t")
-
-proc random_site(v: VCF, prob_bins: seq[float]): Variant =
-    var chrom_select = prob_bins.lowerBound(rand(1.0))
-    let chrom_name = v.contigs[chrom_select].name
-    let start_pos = rand(v.contigs[chrom_select].length.int)
-    let end_pos = v.contigs[chrom_select].length
-    let region = fmt"{chrom_name}:{start_pos}-{end_pos}"
-    for i in v.query(region):
-        return i
-    # If nothing found, likely we are too close to the end; Try again
-    return random_site(v, prob_bins)
+# proc random_site(v: VCF, prob_bins: seq[float]): Variant =
+#     var chrom_select = prob_bins.lowerBound(rand(1.0))
+#     let chrom_name = v.contigs[chrom_select].name
+#     let start_pos = rand(v.contigs[chrom_select].length.int)
+#     let end_pos = v.contigs[chrom_select].length
+#     let region = fmt"{chrom_name}:{start_pos}-{end_pos}"
+#     for i in v.query(region):
+#         return i
+#     # If nothing found, likely we are too close to the end; Try again
+#     return random_site(v, prob_bins)
 
 proc print_variant(wtr: VCF, record: Variant) =
     doAssert wtr.write_variant(record)
 
+iterator iter_variants(v: VCF, g: genome, var_type: string, n_sites: int): Variant =
+    let rng_dist = range_iter("1000")
+    var i = 0
+    var output: bool
+    block site_iter:
+        for r in g.random_site(n = 0, rng_dist):
+            output = false
+            for variant in v.query(r.region):
+                output = 
+                    (var_type == "all") or
+                    (var_type == "snps" and variant.is_snp()) or
+                    (var_type == "mnps" and variant.is_mnp()) or
+                    (var_type == "indels" and variant.is_indel())
+                
+                if output == true:
+                    i += 1
+                    yield variant
+                if i >= n_sites:
+                    break site_iter
 
-proc sample*(vcf_fname: string, positions_in: string, n_sites: int) =
+proc sample*(vcf_fname: string, positions_in: string, var_type: string, n_sites: int) =
     #[
         Calculate GC at various window sizes
     ]#
 
-    # Load all positions
-    #var position_set = new_seq[Position]()
-    #for pos in positions_in.iter_pos():
-    #    position_set.add(pos)
-    var vcf: VCF
-    doAssert open(vcf, vcf_fname)
-    var cum_length = sum(vcf.contigs.mapIt( it.length )).float
-    var chrom_name = vcf.contigs.mapIt( it.name )
-
-    
-    # Weight chromosomes by length
-    var chrom_weights = vcf.contigs.mapIt( it.length.float / cum_length )
-    var prob_bins = new_seq[float](chrom_weights.len)
-    prob_bins[0] = chrom_weights[0]
-    for i in 1..chrom_weights.len - 1:
-        prob_bins[i] = prob_bins[i-1] + chrom_weights[i]
-    
     var wtr:VCF
     doAssert open(wtr, "/dev/stdout", mode="w")
+    
+    var vcf: VCF
+    doAssert open(vcf, vcf_fname)
     wtr.header = vcf.header
     doAssert wtr.write_header()
 
-    # Select a chromosome and position
-    for i in 0..<n_sites:
-        discard wtr.write_variant(random_site(vcf, prob_bins))
+    var genome = get_genome(vcf)
+
+    for variant in vcf.iter_variants(genome, var_type, n_sites):
+        discard wtr.write_variant(variant)
+
 
     close(wtr)
     close(vcf)

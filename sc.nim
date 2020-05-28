@@ -193,10 +193,11 @@ var p = newParser("sc"):
         help("Randomly sample a VCF")
         arg("vcf", nargs = 1, help="Variant file")
         option("--bed", help="A set of bed regions to restrict sampling to")
+        option("-t", "--types", default = "all", help="Variant types to sample (all,snps,mnps,indels")
         option("-n", "--sites", default = "10", help="Number of sites to sample")
 
         run:
-            vcf_sample.sample(opts.vcf, opts.bed, opts.sites.parseInt())
+            vcf_sample.sample(opts.vcf, opts.bed, opts.types, opts.sites.parseInt())
 
 
     command("tsv", group="VCF"):
@@ -265,11 +266,10 @@ var p = newParser("sc"):
                 var bam:BAM
                 doAssert open(bam, opts.input)
                 genome_rand(bam, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
-            # elif opts.input.endswith(".fa") or opts.input.endswith(".fa.gz"):
-            # else:
-            #     var b:BAM
-            #     doAssert open(b, opts.input)
-            #     genome_rand(b)
+            else:
+                var vcf:VCF
+                doAssert open(vcf, opts.input)
+                genome_rand(vcf, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
     
 
 proc get_params(): seq[string] =
