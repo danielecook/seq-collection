@@ -32,6 +32,7 @@ iterator iter_variants(v: VCF, g: genome, var_type: string, n_sites: int): Varia
                     i += 1
                     bloom.insert($variant)
                     yield variant
+                    break
                 if i >= n_sites:
                     break site_iter
 
