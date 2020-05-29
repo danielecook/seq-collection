@@ -1,6 +1,6 @@
 # fq-dedup
 
-The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, this should never happen!
+The `fq-dedup` command de-duplicates a FASTQ by read ID (e.g. `@@D00446:1:140101_HWI-D00446_0001_C8HN4ANXX:8:2210:1238:2018`). Ideally, you should never see this happen, bu true I have observed it when a power outage occurred during a sequencing runs.
 
 The command uses a [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) to identify duplicates, and has to read through the file twice, and output the original FASTQ.
 
@@ -21,7 +21,7 @@ false-positive: 0
 false-positive-rate: 0.0
 ```
 
-The false-positive values are for diagnostics only based on reads initially labeled as duplicates by the bloom filter that were later found not to be.
+The false-positive values are for diagnostics only based on reads initially labeled as duplicates by the bloom filter that were later found not to be true duplicates.
 
 __Benchmark__
 

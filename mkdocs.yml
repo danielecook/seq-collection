@@ -16,11 +16,20 @@ nav:
     - Home: index.md
     - FASTA:
         - fa-gc: fa-gc.md
+    - FASTQ:
+        - fq-count: fq-count.md
+        - fq-dedup: fq-dedup.md
+        - fq-meta: fq-meta.md
     - BAM:
         - insert-size: insert-size.md
         - read-count: read-count.md
     - VCF:
         - json: json.md
+        - sample: sample.md
+    - MULTI:
+        - iter: iter.md
+        - rand: rand.md
+
 
 extra_css:
     - styles.css

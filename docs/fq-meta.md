@@ -1,9 +1,6 @@
 # fq-meta
 
-
-__Scenario:__ You are given an old dusty hard drive packed with sequence data. Your collaborator says "We have some great sequencing data here, if only someone could analyze it." You peek at the filesystem and discover that FASTQs have been renamed, removing crucial information about how they were generated. Your collaborator, however, recalls certain details about which data was sequenced on which sequencer and he has a list of sequencing barcodes and associated samples that you can match on." If only there was a way to determine the barcodes, sequencer, or other essential metadata for each FASTQ...
-
-If this scenerio sounds familiar, `fq-meta`™ is for you. It samples the first few sequences of a FASTQ and outputs a summary for every FASTQ including:
+Summarize FASTQ files, outputting the following:
 
 * A best guess as to the type of sequencer based on instrument and flowcell information
 * A best guess for the quality score format
@@ -11,6 +8,8 @@ If this scenerio sounds familiar, `fq-meta`™ is for you. It samples the first 
 * The machine, run, and other metadata about the FASTQ
 * Information derived from the filename
 * The file location
+
+`fq-meta` is useful for taking an inventory of sequencing data, and is particularly helpful if you are inheriting a poorly organized sequencing project. 
 
 Data is output in a tab-delimited format so that this tool can be used to assemble a database of FASTQs and their associated information. You can do so like this:
 
@@ -40,10 +39,3 @@ __Example output__
 __Input____
 
 `fq-meta` accepts both gzipped FASTQs (`.fq.gz`, `.fastq.gz` ~ inferred from `.gz` extension) and raw text FASTQs.
-
-##### Assembling an FQ-Database
-
-```
-sc fq-meta --header > fastq_db.tsv # Prints just the header
-sc fq-meta sample_1_R1.fq.gz sample_1_R2.fq.gz sample_2_R1.fq.gz sample_2_R2.fq.gz >> fastq_db.tsv
-```
