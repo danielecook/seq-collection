@@ -1,9 +1,10 @@
 table {
     border-collapse: separate;
     border-spacing: 0;
-    overflow-x: scroll !important;
+    overflow: scroll !important;
     width: 100%;
     white-space: nowrap;
+    display: inline-block !important;
     border: 1px solid #E3E3E3 !important;
     border-radius: 3px;
     margin-bottom: 10px; 
