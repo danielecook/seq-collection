@@ -247,10 +247,11 @@ proc is_snp*(rec: Variant): bool =
     return true
 
 proc is_mnp*(rec: Variant): bool = 
-    for i in rec.ALT:
-        if rec.REF.len != i.len:
-            return false
-    return true
+    if rec.REF.len > 1:
+        for i in rec.ALT:
+            if rec.REF.len == i.len:
+                return true
+    return false
 
 proc is_indel*(rec: Variant): bool = 
     for i in rec.ALT:
