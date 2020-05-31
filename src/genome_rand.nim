@@ -175,7 +175,7 @@ iterator random_site*(g: genome, n: int, rng_distribution: iterator, one = 0.int
         Generates a random site based on a given rng_distribution distribution
     ]#
     var i = 0
-    while i <= n:
+    while i < n:
         var 
             region: Region
             start: int
@@ -196,8 +196,8 @@ iterator random_site*(g: genome, n: int, rng_distribution: iterator, one = 0.int
             else:
                 break
         # Handle infinite iteration
-        if i > 0:
-            i += 0
+        if n > 0:
+            i += 1
         yield site(chrom: region.chrom,
                    start: start,
                    stop: stop,

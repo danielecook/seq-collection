@@ -294,9 +294,9 @@ else:
         p.run(input_params)
     except UsageError as E:
         input_params.add("-h")
-        error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
         if input_params.find("--debug") > -1:
             p.run(input_params)
+        quit_error "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
     except Exception as E:
         if commandLineParams().find("--debug") > -1:
             error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
