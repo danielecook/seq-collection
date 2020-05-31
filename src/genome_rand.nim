@@ -174,7 +174,7 @@ iterator random_site*(g: genome, n: int, rng_distribution: iterator, one = 0.int
     #[
         Generates a random site based on a given rng_distribution distribution
     ]#
-    var i = 0
+    var i = if n <= 0: -1 else: 0
     while i < n:
         var 
             region: Region

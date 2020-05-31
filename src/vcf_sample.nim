@@ -46,14 +46,12 @@ proc sample*(vcf_fname: string, positions_in: string, var_type: string, n_sites:
     
     var vcf: VCF
     doAssert open(vcf, vcf_fname)
+    defer: close(vcf)
     wtr.header = vcf.header
     doAssert wtr.write_header()
 
     var genome = get_genome(vcf)
-
     for variant in vcf.iter_variants(genome, var_type, n_sites):
         discard wtr.write_variant(variant)
 
-
     close(wtr)
-    close(vcf)
