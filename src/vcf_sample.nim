@@ -13,6 +13,9 @@ import bloom
 
 randomize()
 
+proc chrom_pos(v: Variant): string = 
+    return fmt"{v.CHROM}:{v.POS}"
+
 iterator iter_variants(v: VCF, g: genome, var_type: string, n_sites: int): Variant =
     let rng_dist = range_iter("1000")
     var bloom = newBloomFilter[uint32](1e8.int, 1.0 / n_sites.float, 0, true)
@@ -28,9 +31,9 @@ iterator iter_variants(v: VCF, g: genome, var_type: string, n_sites: int): Varia
                     (var_type == "mnps" and variant.is_mnp()) or
                     (var_type == "indels" and variant.is_indel())
                 
-                if output and bloom.lookup($variant) == false:
+                if output and bloom.lookup(variant.chrom_pos) == false:
                     i += 1
-                    bloom.insert($variant)
+                    bloom.insert(variant.chrom_pos)
                     yield variant
                     break
                 if i >= n_sites:
