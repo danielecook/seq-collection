@@ -1,5 +1,5 @@
 # Generates a random site
-import nre except toSeq
+import regex
 import hts
 import math
 import random/urandom, random/mersenne
@@ -52,13 +52,15 @@ proc region*(s: site): string =
 proc gen_chrom_table(f: Fai, bed: string, pattern: string): Table[string, Region] =
     # Generate a table of chrom -> chrom_len
     # For bed files this is the sum of regions on that chrom
+    var m_group: regex.RegexMatch
+    let sre = regex.re(pattern)
     if bed != "":
         for region in bed.iter_bed():
-            if is_some(match(region.chrom, re(pattern))):
+            if regex.match(region.chrom, sre, m_group):
                 result[$region] = region
     else:
         for i in 0..<f.len:
-            if is_some(match(f[i], re(pattern))):
+            if regex.match(f[i], sre, m_group):
                 var reg = Region(chrom: f[i],
                                 start: 0,
                                 stop: f.chrom_len(f[i]))
@@ -71,13 +73,14 @@ proc gen_chrom_table(f: Fai, bed: string, pattern: string): Table[string, Region
 proc gen_chrom_table(bam: BAM, bed: string, pattern: string): Table[string, Region] =
     # Generate a table of chrom -> chrom_len
     # For bed files this is the sum of regions on that chrom
+    var m_group: regex.RegexMatch
     if bed != "":
         for region in bed.iter_bed():
-            if pattern == "" or is_some(match(region.chrom, re(pattern))):
+            if pattern == "" or regex.match(region.chrom, regex.re(pattern), m_group):
                 result[$region] = region
     else:
         for contig in bam.hdr.targets:
-            if pattern == "" or is_some(match(contig.name, re(pattern))):
+            if pattern == "" or regex.match(contig.name, regex.re(pattern), m_group):
                 var reg = Region(chrom: contig.name,
                                 start: 0,
                                 stop: contig.length.int)
@@ -90,13 +93,14 @@ proc gen_chrom_table(bam: BAM, bed: string, pattern: string): Table[string, Regi
 proc gen_chrom_table(vcf: VCF, bed: string, pattern: string): Table[string, Region] =
     # Generate a table of chrom -> chrom_len
     # For bed files this is the sum of regions on that chrom
+    var m_group: regex.RegexMatch
     if bed != "":
         for region in bed.iter_bed():
-            if pattern == "" or is_some(match(region.chrom, re(pattern))):
+            if pattern == "" or regex.match(region.chrom, regex.re(pattern), m_group):
                 result[$region] = region
     else:
         for contig in vcf.contigs:
-            if pattern == "" or is_some(match(contig.name, re(pattern))):
+            if pattern == "" or regex.match(contig.name, regex.re(pattern), m_group):
                 var reg = Region(chrom: contig.name,
                                 start: 0,
                                 stop: contig.length.int)

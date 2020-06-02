@@ -1,6 +1,5 @@
 import sequtils
 import strutils
-import utils/gz
 import os
 import re
 import streams

@@ -81,7 +81,6 @@ var p = newParser("sc"):
     #########
     # FASTA #
     #########
-    var b = newSeq[int](3)
     command("fa-gc", group="FASTA"):
         help("Calculate GC content surrouding a location")
         arg("fasta", nargs = 1, help = "Input FASTQ")

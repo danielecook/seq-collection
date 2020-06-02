@@ -9,7 +9,7 @@ import sequtils
 import colorize
 import sequtils
 import tables
-import nre
+import regex
 
 proc ending*(s: string, endings: seq[string]): bool = 
     for i in endings:
@@ -131,7 +131,7 @@ iterator iter_pos*(pos_in: string): Position =
             var curr_line = line.strip(chars = {'\t', ':', ' '})
             curr_line = curr_line.strip(chars = {'\t', ':', ' '})
             try:
-                (chrom, pos) = nre.split(curr_line, re"[\t: ]+")[0..1]
+                (chrom, pos) = regex.split(curr_line, re"[\t: ]+")[0..1]
             except IndexError:
                 # If it is the first line, assume it is a header
                 if n == 1:
