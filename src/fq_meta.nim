@@ -1,7 +1,7 @@
 import sequtils
 import strutils
 import os
-import re
+import regex
 import streams
 import zip/gzipfiles
 import utils/helpers
@@ -44,20 +44,20 @@ type
         sequencer*: seq[string]
 
 
-let InstrumentIDs = @[Instrument(pattern: re"HWI-M[0-9]{4}$", sequencer: @["MiSeq"]),
-                      Instrument(pattern: re"HWUSI", sequencer: @["GenomeAnalyzerIIx"]),
-                      Instrument(pattern: re"M[0-9]{5}$", sequencer: @["MiSeq"]),
-                      Instrument(pattern: re"A[0-9]{5}$", sequencer: @["NovaSeq"]),
-                      Instrument(pattern: re"HWI-C[0-9]{5}$", sequencer: @["HiSeq1500"]),
-                      Instrument(pattern: re"C[0-9]{5}$", sequencer: @["HiSeq1500"]),
-                      Instrument(pattern: re"HWI-D[0-9]{5}$", sequencer: @["HiSeq2500"]),
-                      Instrument(pattern: re"D[0-9]{5}$", sequencer: @["HiSeq2500"]),
-                      Instrument(pattern: re"J[0-9]{5}$", sequencer: @["HiSeq3000"]),
-                      Instrument(pattern: re"K[0-9]{5}$", sequencer: @["HiSeq3000","HiSeq4000"]),
-                      Instrument(pattern: re"E[0-9]{5}$", sequencer: @["HiSeqX"]),
-                      Instrument(pattern: re"NB[0-9]{6}$", sequencer: @["NextSeq"]),
-                      Instrument(pattern: re"NS[0-9]{6}$", sequencer: @["NextSeq"]),
-                      Instrument(pattern: re"MN[0-9]{5}$", sequencer: @["MiniSeq"])]
+let InstrumentIDs = @[Instrument(pattern: regex.re"HWI-M[0-9]{4}$", sequencer: @["MiSeq"]),
+                      Instrument(pattern: regex.re"HWUSI", sequencer: @["GenomeAnalyzerIIx"]),
+                      Instrument(pattern: regex.re"M[0-9]{5}$", sequencer: @["MiSeq"]),
+                      Instrument(pattern: regex.re"A[0-9]{5}$", sequencer: @["NovaSeq"]),
+                      Instrument(pattern: regex.re"HWI-C[0-9]{5}$", sequencer: @["HiSeq1500"]),
+                      Instrument(pattern: regex.re"C[0-9]{5}$", sequencer: @["HiSeq1500"]),
+                      Instrument(pattern: regex.re"HWI-D[0-9]{5}$", sequencer: @["HiSeq2500"]),
+                      Instrument(pattern: regex.re"D[0-9]{5}$", sequencer: @["HiSeq2500"]),
+                      Instrument(pattern: regex.re"J[0-9]{5}$", sequencer: @["HiSeq3000"]),
+                      Instrument(pattern: regex.re"K[0-9]{5}$", sequencer: @["HiSeq3000","HiSeq4000"]),
+                      Instrument(pattern: regex.re"E[0-9]{5}$", sequencer: @["HiSeqX"]),
+                      Instrument(pattern: regex.re"NB[0-9]{6}$", sequencer: @["NextSeq"]),
+                      Instrument(pattern: regex.re"NS[0-9]{6}$", sequencer: @["NextSeq"]),
+                      Instrument(pattern: regex.re"MN[0-9]{5}$", sequencer: @["MiniSeq"])]
 
 type
     Flowcell* = object
@@ -67,29 +67,29 @@ type
 
 # source 0: https://github.com/10XGenomics/supernova/blob/master/tenkit/lib/python/tenkit/illumina_instrument.py (everything not labeled)
 # source 1: https://github.com/CFSAN-Biostatistics/snp-pipeline/blob/f9bd23caaf0f84deea1a6593dadb5d07b00e75e4/snppipeline/fastq.py#L60
-let FCIDs = @[Flowcell(pattern: re"AAXX$", sequencer: @["GenomeAnalyzer"], description: ""), # <-- Source 1
-              Flowcell(pattern: re"C[A-Z,0-9]{4}ANXX$", sequencer: @["HiSeq1500", "HiSeq2000", "HiSeq2500"], description: "High Output (8-lane) v4 flow cell"),
-              Flowcell(pattern: re"C[A-Z,0-9]{4}ACXX$", sequencer: @["HiSeq1000", "HiSeq1500", "HiSeq2000", "HiSeq2500"], description: "High Output (8-lane) v3 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}ADXX$", sequencer: @["HiSeq1500", "HiSeq2500"], description: "Rapid Run (2-lane) v1 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BCXX$", sequencer: @["HiSeq1500", "HiSeq2500"], description: "Rapid Run (2-lane) v2 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BCXY$", sequencer: @["HiSeq1500", "HiSeq2500"], description: "Rapid Run (2-lane) v2 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BBXX$", sequencer: @["HiSeq4000"], description: "(8-lane) v1 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BBXY$", sequencer: @["HiSeq4000"], description: "(8-lane) v1 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}CCXX$", sequencer: @["HiSeqX"], description: "(8-lane) flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}CCXY$", sequencer: @["HiSeqX"], description: "(8-lane) flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}ALXX$", sequencer: @["HiSeqX"], description: "(8-lane) flow cell"),
+let FCIDs = @[Flowcell(pattern: regex.re"AAXX$", sequencer: @["GenomeAnalyzer"], description: ""), # <-- Source 1
+              Flowcell(pattern: regex.re"C[A-Z,0-9]{4}ANXX$", sequencer: @["HiSeq1500", "HiSeq2000", "HiSeq2500"], description: "High Output (8-lane) v4 flow cell"),
+              Flowcell(pattern: regex.re"C[A-Z,0-9]{4}ACXX$", sequencer: @["HiSeq1000", "HiSeq1500", "HiSeq2000", "HiSeq2500"], description: "High Output (8-lane) v3 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}ADXX$", sequencer: @["HiSeq1500", "HiSeq2500"], description: "Rapid Run (2-lane) v1 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BCXX$", sequencer: @["HiSeq1500", "HiSeq2500"], description: "Rapid Run (2-lane) v2 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BCXY$", sequencer: @["HiSeq1500", "HiSeq2500"], description: "Rapid Run (2-lane) v2 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BBXX$", sequencer: @["HiSeq4000"], description: "(8-lane) v1 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BBXY$", sequencer: @["HiSeq4000"], description: "(8-lane) v1 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}CCXX$", sequencer: @["HiSeqX"], description: "(8-lane) flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}CCXY$", sequencer: @["HiSeqX"], description: "(8-lane) flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}ALXX$", sequencer: @["HiSeqX"], description: "(8-lane) flow cell"),
               # source 1
-              Flowcell(pattern: re"H[A-Z,0-9]{4}AGXX$", sequencer: @["NextSeq"], description: "High output flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BGXX$", sequencer: @["NextSeq"], description: "High output flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BGXY$", sequencer: @["NextSeq"], description: "High output flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}BGX2$", sequencer: @["NextSeq"], description: "High output flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}AFXX$", sequencer: @["NextSeq"], description: "Mid output flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}DMXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
-              Flowcell(pattern: re"H[A-Z,0-9]{4}DSXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
-              Flowcell(pattern: re"^A[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
-              Flowcell(pattern: re"^B[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
-              Flowcell(pattern: re"^D[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq nano flow cell"),
-              Flowcell(pattern: re"^G[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq micro flow cell")]
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}AGXX$", sequencer: @["NextSeq"], description: "High output flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BGXX$", sequencer: @["NextSeq"], description: "High output flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BGXY$", sequencer: @["NextSeq"], description: "High output flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}BGX2$", sequencer: @["NextSeq"], description: "High output flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}AFXX$", sequencer: @["NextSeq"], description: "Mid output flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}DMXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
+              Flowcell(pattern: regex.re"H[A-Z,0-9]{4}DSXX$", sequencer: @["NovaSeq"], description: "S2 flow cell"),
+              Flowcell(pattern: regex.re"^A[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
+              Flowcell(pattern: regex.re"^B[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq flow cell"),
+              Flowcell(pattern: regex.re"^D[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq nano flow cell"),
+              Flowcell(pattern: regex.re"^G[A-Z,0-9]{4}$", sequencer: @["MiSeq"], description: "MiSeq micro flow cell")]
 
 proc qual_to_int(q_score: char): int =
     return qual.find(q_score)
@@ -119,13 +119,14 @@ proc detect_sequencer(machine: string, flowcell: string): (seq[string], string, 
     var seq_by_iid: seq[string]
     var seq_by_fcid: seq[string]
     var flowcell_description: string
+    var m_group: regex.RegexMatch
     for k in InstrumentIDs:
-        if re.find(machine, k.pattern) > -1:
+        if regex.find(machine, k.pattern, m_group):
             for s in k.sequencer:
                 seq_by_iid.add(s)
 
     for k in FCIDs:
-        if re.find(flowcell, k.pattern) > -1:
+        if regex.find(flowcell, k.pattern, m_group):
             flowcell_description = k.description
             for s in k.sequencer:
                 seq_by_fcid.add(s)
@@ -224,6 +225,7 @@ proc fq_meta*(fastq: string, sample_n = 20, basename: bool, absolute: bool) =
     
     while not stream.atEnd() and i < sample_n * 4:
         line = stream.readLine()
+        var m_group: regex.RegexMatch
         if i %% 4 == 0:
             try:
                 if i == 0:
@@ -234,7 +236,7 @@ proc fq_meta*(fastq: string, sample_n = 20, basename: bool, absolute: bool) =
                         barcode = qual_line[^2]
                     else:
                         barcode = qual_line[^1]
-                    if re.match(barcode, barcode_re):
+                    if regex.match(barcode, barcode_re, m_group):
                         barcodes[i.div(4)] = barcode
             except IndexError:
                 raise
