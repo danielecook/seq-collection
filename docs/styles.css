@@ -1,7 +1,7 @@
 table {
     border-collapse: separate;
     border-spacing: 0;
-    overflow: scroll !important;
+    overflow: auto !important;
     width: 100%;
     white-space: nowrap;
     display: inline-block !important;
