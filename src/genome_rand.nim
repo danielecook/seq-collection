@@ -56,11 +56,11 @@ proc gen_chrom_table(f: Fai, bed: string, pattern: string): Table[string, Region
     let sre = regex.re(pattern)
     if bed != "":
         for region in bed.iter_bed():
-            if regex.match(region.chrom, sre, m_group):
+            if pattern == "" or regex.match(region.chrom, sre, m_group):
                 result[$region] = region
     else:
         for i in 0..<f.len:
-            if regex.match(f[i], sre, m_group):
+            if pattern == "" or  regex.match(f[i], sre, m_group):
                 var reg = Region(chrom: f[i],
                                 start: 0,
                                 stop: f.chrom_len(f[i]))
