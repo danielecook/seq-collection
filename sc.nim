@@ -27,12 +27,16 @@ import src/read_count
 import src/contamination
 
 # vcf
-import src/vcf2fasta
+#import src/vcf2fasta
 import src/vcf2tsv
 import src/vcf2json
 import src/tajimas_d
-import src/genome_iter
 import src/phylo
+import src/vcf_sample
+
+# multi
+import src/genome_iter
+import src/genome_rand
 
 import src/utils/helpers
 
@@ -77,11 +81,10 @@ var p = newParser("sc"):
     #########
     # FASTA #
     #########
-    var b = newSeq[int](3)
     command("fa-gc", group="FASTA"):
         help("Calculate GC content surrouding a location")
         arg("fasta", nargs = 1, help = "Input FASTQ")
-        option("-p", "--pos", help = "VCF, BED, or string position (i.e. chr1:8675309)")
+        option("-p", "--pos", help = "VCF, BED, or string position (e.g. chr1:8675309)")
         arg("windows", nargs = -1, help = "sequence length up and downstream (50 --> ~100bp window [see docs])")
         run:
             if opts.pos == "":
@@ -131,7 +134,7 @@ var p = newParser("sc"):
 
     command("insert-size", group="BAM"):
         help("Calculate insert-size metrics")
-        option("-d", "--dist", default="", help = "Output raw distribution(s)")
+        option("-d", "--dist", default="0", help = "Output raw distribution(s)")
         arg("bam", nargs = -1, help = "Input BAM")
         flag("-t", "--header", help="Output the header")
         flag("-b", "--basename", help="Add basename column")
@@ -185,6 +188,17 @@ var p = newParser("sc"):
         run:
             tajimas_d.calc_tajima(parse_stdin(opts.vcf), opts.region)
 
+    command("sample", group="VCF"):
+        help("Randomly sample a VCF")
+        arg("vcf", nargs = 1, help="Variant file")
+        option("--bed", help="A set of bed regions to restrict sampling to")
+        option("-t", "--types", default = "all", help="Variant types to sample (all,snps,mnps,indels")
+        option("-n", "--sites", default = "10", help="Number of sites to sample")
+
+        run:
+            vcf_sample.sample(opts.vcf, opts.bed, opts.types, opts.sites.parseInt())
+
+
     command("tsv", group="VCF"):
         help("Convert a VCF to TSV")
         arg("vcf", nargs = 1, help="VCF to convert to JSON")
@@ -211,14 +225,19 @@ var p = newParser("sc"):
             
 
     command("iter", group="MULTI"):
-        help("Generate genomic ranges for iteration from a BAM or VCF for parallel execution")
+        help("Generate genomic ranges for iteration from a FASTA, BAM, or VCF for parallel execution")
         arg("input", nargs = 1, help = "Input VCF or BAM")
         arg("width", default="10000", nargs = 1, help = "bp length; Set to 0 to list chromosomes")
         run:
+            let fname = opts.input.toLower()
             var width = helpers.sci_parse_int(opts.width)
             if width < 0:
                 quit_error("Width must be greater than 0")
-            if opts.input.endswith(".vcf.gz") or opts.input.endswith(".vcf") or opts.input.endswith(".vcf"):
+            if fname.is_fasta():
+                var f:Fai
+                doAssert open(f, opts.input)
+                genome_iter(f, width)
+            elif fname.is_vcf():
                 var v:VCF
                 doAssert open(v, opts.input)
                 genome_iter(v, width)
@@ -226,6 +245,30 @@ var p = newParser("sc"):
                 var b:BAM
                 doAssert open(b, opts.input)
                 genome_iter(b, width)
+
+    command("rand", group="MULTI"):
+        help("Generate random genomic positions and ranges")
+        arg("input", nargs = 1, help = "Input FASTA, BAM, or VCF or BAM")
+        option("-n", "--sites", default = "10", help = "Number of sites")
+        option("-b", "--bed", help = "BED (0-based) of regions to restrict to")
+        option("-d", "--dist", default="0", help = "Output regions following a distribution ex: N(1,5) [see docs]")
+        option("-p", "--pattern", default="", help = "A regular expression to use for chromosomes to keep")
+        flag("-1", "--one", help = "Output 1-based coordinates")
+        run:
+            let one = if opts.one: 1 else: 0
+            let fname = opts.input.toLower()
+            if fname.is_fasta():
+                var fasta:Fai
+                doAssert open(fasta, opts.input)
+                genome_rand(fasta, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
+            elif fname.is_bam():
+                var bam:BAM
+                doAssert open(bam, opts.input)
+                genome_rand(bam, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
+            else:
+                var vcf:VCF
+                doAssert open(vcf, opts.input)
+                genome_rand(vcf, opts.sites.parseInt(), opts.bed, opts.dist, opts.pattern, one)
     
 
 proc get_params(): seq[string] =
@@ -250,9 +293,9 @@ else:
         p.run(input_params)
     except UsageError as E:
         input_params.add("-h")
-        error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
         if input_params.find("--debug") > -1:
             p.run(input_params)
+        quit_error "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
     except Exception as E:
         if commandLineParams().find("--debug") > -1:
             error_msg "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed

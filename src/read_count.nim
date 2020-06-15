@@ -61,9 +61,7 @@ proc cmd_read_count*(bamfile: string, positions: string) =
     var 
         b: Bam
         offset: int
-        result: Position
         mapping_quality: uint8
-        base_rec: BaseCounts
         base_quality: uint8
 
     open(b, bamfile, index=true)

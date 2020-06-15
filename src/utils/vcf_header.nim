@@ -1,4 +1,4 @@
-import re
+import regex
 import strutils
 import strformat
 const format_fields = @["ID", "Number", "Type", "Description"]
@@ -33,43 +33,43 @@ type
 
 
 proc extract_contig(line: string): contig =
-    var matches: array[2, string]
-    if match(line, re".*ID=([^,]+),.*length=([0-9]+)", matches, 2):
-        return contig(ID: matches[0], length: matches[1].parseInt())
+    var m: RegexMatch
+    if regex.match(line, regex.re".*ID=(?P<ID>[^,]+),.*length=(?P<length>[0-9]+)", m, 2):
+        return contig(ID: m.group("ID", line)[0], length: m.group("length", line)[0].parseInt())
+
 
 proc extract_info(line: string): info =
-    var m: array[1, string]
+    var m: RegexMatch
     var r: info
     for field in format_fields:
-        if match(line, re($(fmt(".*{field}=([^,>]+).*"))), m, 1):
-            #r[field] = m[0]
+        if match(line, regex.re($(fmt(".*{field}=(?P<val>[^,>]+).*"))), m, 1):
             case field
-            of "ID": r.ID = m[0]
-            of "Number": r.Number = m[0]
-            of "Type": r.Type = m[0]
-            of "Description": r.Description = m[0] 
+            of "ID": r.ID = m.group("val", line)[0]
+            of "Number": r.Number = m.group("val", line)[0]
+            of "Type": r.Type = m.group("val", line)[0]
+            of "Description": r.Description = m.group("val", line)[0]
     return r
 
 proc extract_format(line: string): format =
-    var m: array[1, string]
+    var m: RegexMatch
     var r: format
     for field in format_fields:
-        if match(line, re($(fmt(".*{field}=([^,>]+).*"))), m, 1):
+        if match(line, regex.re($(fmt(".*{field}=(?P<val>[^,>]+).*"))), m, 1):
             case field
-            of "ID": r.ID = m[0]
-            of "Number": r.Number = m[0]
-            of "Type": r.Type = m[0]
-            of "Description": r.Description = m[0]
+            of "ID": r.ID = m.group("val", line)[0]
+            of "Number": r.Number = m.group("val", line)[0]
+            of "Type": r.Type = m.group("val", line)[0]
+            of "Description": r.Description = m.group("val", line)[0]
     return r
 
 proc extract_filter(line: string): filter =
-    var m: array[1, string]
+    var m: RegexMatch
     var r: filter
     for field in filter_fields:
-        if match(line, re($(fmt(".*{field}=([^,>]+).*"))), m, 1):
+        if match(line, re($(fmt(".*{field}=(?P<val>[^,>]+).*"))), m, 1):
             case field
-            of "ID": r.ID = m[0]
-            of "Description": r.Description = m[0] 
+            of "ID": r.ID = m.group("val", line)[0]
+            of "Description": r.Description = m.group("val", line)[0]
     return r
 
     

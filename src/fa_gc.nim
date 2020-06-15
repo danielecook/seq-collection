@@ -1,6 +1,4 @@
-import memfiles
 import streams
-import zip/gzipfiles
 import utils/helpers
 import strformat
 import algorithm
@@ -46,7 +44,6 @@ proc calc_window_set(fasta: string, p: Position, windows: seq[int]): result_gc =
     # subset, calculate, repeat, etc.
     var 
         output = new_seq[float](windows.len)
-        trim_len: int
 
     # Convert from 1-based coordinates
     if p.pos0 > fasta.len - 1:
@@ -86,7 +83,6 @@ proc fa_gc*(fasta: string, positions_in: string, windows_in: seq[string]) =
     var max_pos: int
     var curr_chrom: string
     var chrom_fasta: string
-    var thread_count = 0
     var fa_gc_results = newSeq[FlowVar[result_gc]](position_set.len)
     for idx, chr_pos in position_set:
         # load chromosome

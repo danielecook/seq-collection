@@ -9,7 +9,22 @@ import sequtils
 import colorize
 import sequtils
 import tables
-import nre
+import regex
+
+proc ending*(s: string, endings: seq[string]): bool = 
+    for i in endings:
+        if s.endswith(i):
+            return true
+    return false
+
+proc is_fasta*(s: string): bool = 
+    return s.toLower().ending(@[".fa.gz", ".fa", ".fasta", ".fasta.gz"])
+
+proc is_bam*(s: string): bool = 
+    return s.toLower().ending(@[".sam", ".bam", ".cram"])
+
+proc is_vcf*(s: string): bool = 
+    return s.toLower().ending(@[".vcf", ".vcf.gz", ".bcf"])
 
 proc error_msg*(msg: string, error_code = 1) =
     stderr.write_line fmt"Error {error_code}: {msg}".fgRed
@@ -91,7 +106,7 @@ iterator iter_pos*(pos_in: string): Position =
             doAssert open(v, pos_in)
             for line in v:
                 yield Position(chrom: $line.CHROM, 
-                            pos: line.POS.int)
+                               pos: line.POS.int)
         
         # TODO: Bed handling needs to be reworked.
         # Bedfiles
@@ -116,7 +131,7 @@ iterator iter_pos*(pos_in: string): Position =
             var curr_line = line.strip(chars = {'\t', ':', ' '})
             curr_line = curr_line.strip(chars = {'\t', ':', ' '})
             try:
-                (chrom, pos) = nre.split(curr_line, re"[\t: ]+")[0..1]
+                (chrom, pos) = regex.split(curr_line, re"[\t: ]+")[0..1]
             except IndexError:
                 # If it is the first line, assume it is a header
                 if n == 1:
@@ -134,6 +149,7 @@ iterator iter_pos*(pos_in: string): Position =
                 else:
                     warning_msg fmt"""Invalid line: {n} in "{pos_in}" > {line}"""
                     continue
+
 
 proc is_numeric(s: string): bool =
     return all(s, isDigit)
@@ -219,3 +235,26 @@ proc sci_parse_int*(s: string): int =
         let exponent = scientific_notation[1].parseInt()
         return math.pow(coeff * 10.0, exponent.float).int
     return s.replace(",", "").parseInt()
+
+#=========#
+#   VCF   #
+#=========#
+
+proc is_snp*(rec: Variant): bool = 
+    for i in @[rec.REF].concat(rec.ALT):
+        if i.len != 1:
+            return false
+    return true
+
+proc is_mnp*(rec: Variant): bool = 
+    if rec.REF.len > 1:
+        for i in rec.ALT:
+            if rec.REF.len == i.len:
+                return true
+    return false
+
+proc is_indel*(rec: Variant): bool = 
+    for i in rec.ALT:
+        if rec.REF.len == i.len:
+            return false
+    return true

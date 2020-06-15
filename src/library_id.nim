@@ -7,7 +7,7 @@ import math
 import stats
 import os
 import colorize
-import re
+import regex
 import algorithm
 import threadpool
 import utils/helpers

@@ -1,8 +1,6 @@
-import memfiles
 import streams
 import zip/gzipfiles
 import utils/helpers
-import strformat
 import strutils
 import os
 
@@ -10,10 +8,7 @@ const fq_count_header* = ["reads",
                           "gc_content",
                           "gc_bases",
                           "n_bases",
-                          "bases",
-                          "basename",
-                          "absolute_path"].join("\t")
-
+                          "bases"].join("\t")
 
 
 proc fq_count*(fastq: string, basename: bool, absolute: bool) =
