@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>fq-meta - seq-collection</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../styles.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "fq-meta";
+    var mkdocs_page_input_path = "fq-meta.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> seq-collection</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">FASTA</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../fa-gc/">fa-gc</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">FASTQ</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../fq-count/">fq-count</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../fq-dedup/">fq-dedup</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">fq-meta</a>
+    <ul class="current">
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">BAM</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../insert-size/">insert-size</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../read-count/">read-count</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">VCF</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../json/">json</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../sample/">sample</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">MULTI</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../iter/">iter</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../rand/">rand</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">seq-collection</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>FASTQ &raquo;</li>
+        
+      
+    
+    <li>fq-meta</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/danielecook/seq-collection/edit/master/docs/fq-meta.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="fq-meta">fq-meta<a class="headerlink" href="#fq-meta" title="Permanent link">&para;</a></h1>
+<p>Summarize FASTQ files, outputting the following:</p>
+<ul>
+<li>A best guess as to the type of sequencer based on instrument and flowcell information</li>
+<li>A best guess for the quality score format</li>
+<li>The barcode/index used to multiplex the sample which can be useful for identifying samples</li>
+<li>The machine, run, and other metadata about the FASTQ</li>
+<li>Information derived from the filename</li>
+<li>The file location</li>
+</ul>
+<p><code>fq-meta</code> is useful for taking an inventory of sequencing data, and is particularly helpful if you are inheriting a poorly organized sequencing project. </p>
+<p>Data is output in a tab-delimited format so that this tool can be used to assemble a database of FASTQs and their associated information. You can do so like this:</p>
+<pre><code class="bash">sc fq-meta --header &gt; my_fq_database.txt # Use this to output just the variable names
+sc fq-meta *.fq.gz &gt;&gt; my_fq_database.txt
+</code></pre>
+
+<p>The resulting dataset can be combined with other metadata and filtered to select samples for processing in a pipeline.</p>
+<p>You can also parallelize the operation with <a href="https://www.gnu.org/software/parallel/">GNU-parallel</a>.</p>
+<pre><code class="bash">sc fq-meta --header &gt; my_fq_database.txt # Use this to output just the variable names
+parallel -j 8 sc fq-meta ::: find . -name '*.fq.gz' &gt;&gt; my_fq_database.txt
+</code></pre>
+
+<p><strong>Example output</strong></p>
+<table>
+<thead>
+<tr>
+<th>machine</th>
+<th>sequencer</th>
+<th>prob_sequencer</th>
+<th>flowcell</th>
+<th>flowcell_description</th>
+<th>run</th>
+<th>lane</th>
+<th>sequence_id</th>
+<th>index1</th>
+<th>index2</th>
+<th>qual_format</th>
+<th>qual_phred</th>
+<th>qual_multiple</th>
+<th>min_qual</th>
+<th>max_qual</th>
+<th>n_lines</th>
+<th>basename</th>
+<th>absolute_path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D00446</td>
+<td>HiSeq2000/2500</td>
+<td>high:machine+flowcell</td>
+<td>C8HN4ANXX</td>
+<td>High Output (8-lane) v4 flow cell</td>
+<td>1</td>
+<td>8</td>
+<td></td>
+<td>GCTCGGTA</td>
+<td></td>
+<td>Sanger;Illumina 1.8+</td>
+<td>Phred+33</td>
+<td>TRUE</td>
+<td>14</td>
+<td>14</td>
+<td>1</td>
+<td>illumina_2000_2500.fq</td>
+<td>…</td>
+</tr>
+<tr>
+<td>K00100</td>
+<td>HiSeq3000/4000</td>
+<td>high:machine+flowcell</td>
+<td>H300JBBXX</td>
+<td>(8-lane) v1 flow cell</td>
+<td>33</td>
+<td>6</td>
+<td></td>
+<td>GCCAAT</td>
+<td></td>
+<td>Sanger;Illumina 1.8+</td>
+<td>Phred+33</td>
+<td>TRUE</td>
+<td>14</td>
+<td>14</td>
+<td>1</td>
+<td>illumina_3000_4000.fq</td>
+<td>…</td>
+</tr>
+<tr>
+<td>D00209</td>
+<td>HiSeq2000/2500</td>
+<td>high:machine+flowcell</td>
+<td>CACDKANXX</td>
+<td>High Output (8-lane) v4 flow cell</td>
+<td>258</td>
+<td>6</td>
+<td></td>
+<td>CGCAGTT</td>
+<td></td>
+<td>Sanger;Illumina 1.8+</td>
+<td>Phred+33</td>
+<td>TRUE</td>
+<td>0</td>
+<td>37</td>
+<td>1</td>
+<td>illumina_6.fq</td>
+<td>…</td>
+</tr>
+<tr>
+<td>D00209</td>
+<td>HiSeq2000/2500</td>
+<td>high:machine+flowcell</td>
+<td>CACDKANXX</td>
+<td>High Output (8-lane) v4 flow cell</td>
+<td>258</td>
+<td>6</td>
+<td></td>
+<td>GAGCAAG</td>
+<td></td>
+<td>Sanger;Illumina 1.8+</td>
+<td>Phred+33</td>
+<td>TRUE</td>
+<td>0</td>
+<td>37</td>
+<td>1</td>
+<td>illumina_7.fq</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>__Input____</p>
+<p><code>fq-meta</code> accepts both gzipped FASTQs (<code>.fq.gz</code>, <code>.fastq.gz</code> ~ inferred from <code>.gz</code> extension) and raw text FASTQs.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../insert-size/" class="btn btn-neutral float-right" title="insert-size">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../fq-dedup/" class="btn btn-neutral" title="fq-dedup"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/danielecook/seq-collection/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../fq-dedup/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../insert-size/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
