@@ -38,7 +38,7 @@ proc warning_msg*(msg: string) =
 
 proc assert_file*(fname: string): string =
     # Checks that a file exists and throws an error if not
-    if not fileExists(fname) and fname != "STDIN":
+    if not fileExists(fname) and fname != "STDIN" and fname.startsWith("http") == false:
         quit_error fmt"{fname} does not exist or is not readable"
     return fname
 
